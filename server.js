@@ -5,6 +5,7 @@ const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
+app.use('/dashboard', express.static(path.join(__dirname, 'public')));
 app.get('/login', (req, res) => res.sendFile(path.join(__dirname, 'views', 'login.html')));
 app.get('/dashboard', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
 app.get('/dashboard/*', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
