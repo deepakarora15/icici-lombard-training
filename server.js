@@ -190,6 +190,7 @@ app.get('/api/leaderboard', requireAuth, (req, res) => {
     res.json(leaders);
 });
 
-app.listen(PORT, () => {
-    console.log(`Marine Clauses Dashboard running on http://localhost:${PORT}`);
+app.listen(PORT, '0.0.0.0', () => {
+    console.log(`Server running on port ${PORT}`);
+    console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
 });

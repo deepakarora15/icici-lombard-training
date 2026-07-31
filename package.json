@@ -1,14 +1,15 @@
 {
-  "name": "marine-clauses-dashboard",
+  "name": "icici-lombard-training",
   "version": "1.0.0",
   "description": "ICICI Lombard Insurance Training Platform",
   "main": "server.js",
+  "type": "commonjs",
   "engines": {
     "node": ">=18.0.0"
   },
   "scripts": {
     "start": "node server.js",
-    "dev": "node server.js"
+    "build": "echo 'No build step'"
   },
   "dependencies": {
     "express": "^4.18.2",
