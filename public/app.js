@@ -136,42 +136,30 @@ document.querySelectorAll('.filter-btn').forEach(btn => {
     });
 });
 
-// ===== INSURANCE MATRIX =====
-function renderMatrix(type = 'inland') {
-    const container = document.getElementById('matrixContainer');
-    const data = type === 'inland' ? inlandMatrix : marineMatrix;
-    const headers = type === 'inland'
-        ? ['Incoterm', 'ITC (A) – All Risks', 'ITC (B) – Limited Perils', 'ITC (C) – Major Perils']
-        : ['Incoterm', 'ICC (A) – All Risks', 'ICC (B) – Named Perils', 'ICC (C) – Major Perils'];
-
-    const getCellClass = (val) => {
-        const v = val.toLowerCase();
-        if (v.includes('mandatory')) return 'cell-mandatory';
-        if (v.includes('recommended')) return 'cell-recommended';
-        if (v.includes('acceptable') || v.includes('optional')) return 'cell-acceptable';
-        if (v.includes('limited')) return 'cell-limited';
-        if (v.includes('not recommended') || v.includes('not preferred') || v.includes('not applicable') || v.includes('rare')) return 'cell-not-recommended';
-        return 'cell-common';
-    };
-
-    let html = `<table class="matrix-table"><thead><tr>`;
-    headers.forEach(h => html += `<th>${h}</th>`);
-    html += `</tr></thead><tbody>`;
-    data.forEach(row => {
-        const vals = type === 'inland' ? [row.itcA, row.itcB, row.itcC] : [row.iccA, row.iccB, row.iccC];
-        html += `<tr><td><strong>${row.incoterm}</strong></td>`;
-        vals.forEach(v => html += `<td class="${getCellClass(v)}">${v}</td>`);
-        html += `</tr>`;
-    });
-    html += `</tbody></table>`;
-    container.innerHTML = html;
+// ===== INSURANCE TABS =====
+function renderInsuranceTab(tab = 'marine') {
+    const data = insuranceTabContent[tab];
+    if (!data) return;
+    const container = document.getElementById('insContent');
+    container.innerHTML = `
+        <h2 class="ins-section-title">${data.title}</h2>
+        <p class="ins-section-desc">${data.desc}</p>
+        <div class="ins-cards">
+            ${data.cards.map(card => `
+                <div class="ins-card">
+                    <h3>${card.title}</h3>
+                    ${card.content}
+                </div>
+            `).join('')}
+        </div>
+    `;
 }
 
-document.querySelectorAll('.toggle-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-        document.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        renderMatrix(btn.dataset.matrix);
+document.querySelectorAll('.ins-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+        document.querySelectorAll('.ins-tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        renderInsuranceTab(tab.dataset.ins);
     });
 });
 
@@ -636,5 +624,5 @@ renderRiskFlow();
 renderIncoterms();
 renderStoryChips();
 renderStory('EXW');
-renderMatrix('inland');
+renderInsuranceTab('marine');
 renderLessons();
