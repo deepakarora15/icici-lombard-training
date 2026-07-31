@@ -178,7 +178,6 @@ app.post('/api/register', async (req, res) => {
         const { username, password, displayName } = req.body;
         if (!username || !password) return res.status(400).json({ error: 'Username and password are required' });
         if (username.length < 3) return res.status(400).json({ error: 'Username must be at least 3 characters' });
-        if (password.length < 4) return res.status(400).json({ error: 'Password must be at least 4 characters' });
 
         const existing = await findUser(username.toLowerCase());
         if (existing) return res.status(400).json({ error: 'Username already taken' });
