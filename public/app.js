@@ -563,10 +563,27 @@ function renderLOBDashboard() {
             <p style="color:var(--text-secondary);margin-bottom:16px;font-size:14px;">Optional extensions that can be added to the base policy by paying additional premium</p>
             <div class="lob-addon-cards">
                 ${lobData.addons.map(a => `
-                    <div class="lob-addon-card">
+                    <div class="lob-addon-card" onclick="this.classList.toggle('expanded')">
                         <div class="addon-code">${a.code}</div>
                         <div class="addon-name">${a.name}</div>
                         <div class="addon-desc">${a.description}</div>
+                        ${a.whoShouldTake ? `
+                        <div class="addon-details">
+                            <div class="addon-detail-item">
+                                <span class="addon-detail-label">👤 Who Should Take It</span>
+                                <p>${a.whoShouldTake}</p>
+                            </div>
+                            <div class="addon-detail-item">
+                                <span class="addon-detail-label">❓ Why It's Needed</span>
+                                <p>${a.whyItsNeeded}</p>
+                            </div>
+                            <div class="addon-detail-item warning">
+                                <span class="addon-detail-label">⚠️ Claim Impact If NOT Opted</span>
+                                <p>${a.claimImpact}</p>
+                            </div>
+                        </div>
+                        <div class="addon-expand-hint">Click to expand ▼</div>
+                        ` : ''}
                     </div>
                 `).join('')}
             </div>
