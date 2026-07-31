@@ -557,38 +557,6 @@ function renderLOBDashboard() {
                 `).join('')}
             </div>
         </div>
-        ${lobData.addons ? `
-        <div class="lob-policies-section" style="margin-top:32px;">
-            <h2>🔧 Add-on Covers & Extensions (${lobData.addons.length})</h2>
-            <p style="color:var(--text-secondary);margin-bottom:16px;font-size:14px;">Optional extensions that can be added to the base policy by paying additional premium</p>
-            <div class="lob-addon-cards">
-                ${lobData.addons.map(a => `
-                    <div class="lob-addon-card" onclick="this.classList.toggle('expanded')">
-                        <div class="addon-code">${a.code}</div>
-                        <div class="addon-name">${a.name}</div>
-                        <div class="addon-desc">${a.description}</div>
-                        ${a.whoShouldTake ? `
-                        <div class="addon-details">
-                            <div class="addon-detail-item">
-                                <span class="addon-detail-label">👤 Who Should Take It</span>
-                                <p>${a.whoShouldTake}</p>
-                            </div>
-                            <div class="addon-detail-item">
-                                <span class="addon-detail-label">❓ Why It's Needed</span>
-                                <p>${a.whyItsNeeded}</p>
-                            </div>
-                            <div class="addon-detail-item warning">
-                                <span class="addon-detail-label">⚠️ Claim Impact If NOT Opted</span>
-                                <p>${a.claimImpact}</p>
-                            </div>
-                        </div>
-                        <div class="addon-expand-hint">Click to expand ▼</div>
-                        ` : ''}
-                    </div>
-                `).join('')}
-            </div>
-        </div>
-        ` : ''}
     `;
 }
 
@@ -662,23 +630,31 @@ function renderLOBLessons() {
         renderLessons();
         return;
     }
-    const data = getLOBData();
-    if (!data) return;
+    const lobData = lobPolicies[currentLOB];
+    if (!lobData || !lobData.addons) return;
     const config = lobConfig[currentLOB];
 
-    // Update learning page header
     const header = document.querySelector('#learning .page-header');
-    header.innerHTML = `<h1>${config.icon} ${config.name} — Learning Modules</h1><p>Step-by-step training for ${config.name.toLowerCase()}</p>`;
+    header.innerHTML = `<h1>${config.icon} ${config.name} — Add-on Covers & Extensions</h1><p>Click any add-on to learn: what it covers, who needs it, and what happens if you don't opt for it</p>`;
 
     const container = document.getElementById('lessonsContainer');
-    container.innerHTML = data.lessons.map((lesson, idx) => `
-        <div class="lesson-card" data-lesson="${lesson.id}">
+    container.innerHTML = lobData.addons.map((addon, idx) => `
+        <div class="lesson-card" data-lesson="${idx}">
             <div class="lesson-header">
-                <div class="lesson-icon">${lesson.icon}</div>
-                <div class="lesson-title-wrap"><h3>Module ${idx + 1}: ${lesson.title}</h3><p>Click to expand</p></div>
+                <div class="lesson-icon">📋</div>
+                <div class="lesson-title-wrap">
+                    <h3>${addon.code} — ${addon.name}</h3>
+                    <p>IRDA Ref: ${addon.irdaRef || ''} | Click to expand</p>
+                </div>
                 <div class="lesson-toggle">▼</div>
             </div>
-            <div class="lesson-body">${lesson.content}</div>
+            <div class="lesson-body">
+                <h3>${addon.name}</h3>
+                <p>${addon.description}</p>
+                ${addon.whoShouldTake ? `<h4>👤 Who Should Take It</h4><p>${addon.whoShouldTake}</p>` : ''}
+                ${addon.whyItsNeeded ? `<h4>❓ Why It's Needed</h4><p>${addon.whyItsNeeded}</p>` : ''}
+                ${addon.claimImpact ? `<div class="lesson-highlight"><h4>⚠️ Claim Impact If NOT Opted</h4><p>${addon.claimImpact}</p></div>` : ''}
+            </div>
         </div>
     `).join('');
 
