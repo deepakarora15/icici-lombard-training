@@ -162,17 +162,19 @@ function requireAuth(req, res, next) {
 }
 
 // ===== STATIC FILES =====
-app.use(express.static(path.join(__dirname, 'public'), { maxAge: '1h' }));
-app.use('/app', express.static(path.join(__dirname, 'public'), { maxAge: '1h' }));
-app.use('/dashboard', express.static(path.join(__dirname, 'public'), { maxAge: '1h' }));
-
-// Catch-all — serve index.html for any path
-app.get('/app/*', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
-app.get('/dashboard/*', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
+app.use('/dashboard', requireAuth, express.static(path.join(__dirname, 'public'), { maxAge: '1h' }));
+app.get('/dashboard/*', requireAuth, (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
 
 // ===== ROUTES =====
 app.get('/health', (req, res) => res.json({ status: 'ok', db: usePostgres ? 'postgresql' : 'memory' }));
-app.get('/login', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
+app.get('/', (req, res) => {
+    if (req.session && req.session.userId) return res.redirect('/dashboard');
+    res.redirect('/login');
+});
+app.get('/login', (req, res) => {
+    if (req.session && req.session.userId) return res.redirect('/dashboard');
+    res.sendFile(path.join(__dirname, 'views', 'login.html'));
+});
 
 // Register
 app.post('/api/register', async (req, res) => {

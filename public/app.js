@@ -12,14 +12,11 @@ async function loadUser() {
             if (currentUser.progress && currentUser.progress.bestScore) {
                 document.getElementById('quizScoreDisplay').textContent = currentUser.progress.bestScore;
             }
-        } else {
-            // No auth required - show as guest
-            document.getElementById('userAvatar').textContent = 'G';
-            document.getElementById('userName').innerHTML = `Guest <small>Open access</small>`;
+        } else if (res.status === 401) {
+            window.location.href = '/login';
         }
     } catch (e) {
-        document.getElementById('userAvatar').textContent = 'G';
-        document.getElementById('userName').innerHTML = `Guest <small>Open access</small>`;
+        console.error('Failed to load user', e);
     }
 }
 
