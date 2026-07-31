@@ -665,6 +665,57 @@ function renderLOBLessons() {
     });
 }
 
+// ===== SEARCH ADD-ONS =====
+function getAllAddons() {
+    const allAddons = [];
+    const lobs = ['fire', 'engineering', 'liability'];
+    lobs.forEach(lob => {
+        const lobData = lobPolicies[lob];
+        if (lobData && lobData.addons) {
+            lobData.addons.forEach(addon => {
+                allAddons.push({ ...addon, lob: lob, lobName: lobConfig[lob].name, lobIcon: lobConfig[lob].icon });
+            });
+        }
+    });
+    return allAddons;
+}
+
+function renderSearchResults(query) {
+    const container = document.getElementById('searchResults');
+    if (!query || query.length < 2) {
+        container.innerHTML = '<p class="search-no-results">Type at least 2 characters to search across all add-on covers...</p>';
+        return;
+    }
+    const allAddons = getAllAddons();
+    const q = query.toLowerCase();
+    const results = allAddons.filter(a =>
+        a.name.toLowerCase().includes(q) ||
+        a.code.toLowerCase().includes(q) ||
+        a.description.toLowerCase().includes(q) ||
+        (a.whoShouldTake && a.whoShouldTake.toLowerCase().includes(q)) ||
+        (a.whyItsNeeded && a.whyItsNeeded.toLowerCase().includes(q))
+    );
+
+    if (results.length === 0) {
+        container.innerHTML = `<p class="search-no-results">No add-ons found matching "${query}". Try different keywords.</p>`;
+        return;
+    }
+
+    container.innerHTML = `<p class="search-count">${results.length} add-on(s) found</p>` + results.map(a => `
+        <div class="search-result-card">
+            <div class="sr-lob">${a.lobIcon} ${a.lobName} ${a.irdaRef ? '| IRDA #' + a.irdaRef : ''}</div>
+            <div class="sr-name">${a.code} — ${a.name}</div>
+            <div class="sr-desc">${a.description}</div>
+            ${a.whoShouldTake ? `<div class="sr-detail"><strong>Who:</strong> ${a.whoShouldTake}</div>` : ''}
+            ${a.claimImpact ? `<div class="sr-detail"><strong>⚠️ If not opted:</strong> ${a.claimImpact}</div>` : ''}
+        </div>
+    `).join('');
+}
+
+document.getElementById('addonSearchInput').addEventListener('input', (e) => {
+    renderSearchResults(e.target.value.trim());
+});
+
 // ===== INIT =====
 loadUser();
 renderRiskFlow();
