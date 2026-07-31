@@ -1,37 +1,43 @@
+// Auth guard
+(function(){var s=localStorage.getItem('ilSession');if(!s||!JSON.parse(s).username){window.location.href='/login';return;}})();
+
 // ===== USER SESSION =====
 let currentUser = null;
 let currentLOB = 'marine';
 
 async function loadUser() {
-    try {
-        const res = await fetch('/api/user');
-        if (res.ok) {
-            currentUser = await res.json();
-            document.getElementById('userAvatar').textContent = currentUser.displayName ? currentUser.displayName.charAt(0).toUpperCase() : 'U';
-            document.getElementById('userName').innerHTML = `${currentUser.displayName || 'User'} <small>@${currentUser.username || 'guest'}</small>`;
-            if (currentUser.progress && currentUser.progress.bestScore) {
-                document.getElementById('quizScoreDisplay').textContent = currentUser.progress.bestScore;
-            }
-        } else if (res.status === 401) {
-            window.location.href = '/login';
-        }
-    } catch (e) {
-        console.error('Failed to load user', e);
-    }
+    const session = JSON.parse(localStorage.getItem('ilSession') || 'null');
+    if (!session) { window.location.href = '/login'; return; }
+    currentUser = session;
+    document.getElementById('userAvatar').textContent = session.username.charAt(0).toUpperCase();
+    document.getElementById('userName').innerHTML = `${session.username} <small>${session.role}</small>`;
 }
 
-document.getElementById('logoutBtn').addEventListener('click', async () => {
-    await fetch('/api/logout', { method: 'POST' });
+document.getElementById('logoutBtn').addEventListener('click', () => {
+    const session = JSON.parse(localStorage.getItem('ilSession') || 'null');
+    if (session) {
+        const logs = JSON.parse(localStorage.getItem('ilLoginLogs') || '[]');
+        logs.unshift({ username: session.username, role: session.role, action: 'Logout', timestamp: new Date().toISOString() });
+        if (logs.length > 100) logs.pop();
+        localStorage.setItem('ilLoginLogs', JSON.stringify(logs));
+    }
+    localStorage.removeItem('ilSession');
     window.location.href = '/login';
 });
 
 async function saveProgress(quizScore, lessonsCompleted) {
+    // Progress saved locally (no server needed)
     try {
-        await fetch('/api/progress', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ quizScore, lessonsCompleted })
-        });
+        const session = JSON.parse(localStorage.getItem('ilSession') || 'null');
+        if (!session) return;
+        const key = 'ilProgress_' + session.username;
+        const progress = JSON.parse(localStorage.getItem(key) || '{}');
+        if (quizScore !== undefined) {
+            progress.bestScore = Math.max(progress.bestScore || 0, quizScore);
+            progress.quizAttempts = (progress.quizAttempts || 0) + 1;
+        }
+        if (lessonsCompleted !== undefined) progress.lessonsCompleted = lessonsCompleted;
+        localStorage.setItem(key, JSON.stringify(progress));
     } catch (e) {
         console.error('Failed to save progress', e);
     }
@@ -49,6 +55,7 @@ navLinks.forEach(link => {
         link.classList.add('active');
         document.getElementById(tab).classList.add('active');
         if (tab === 'leaderboard') loadLeaderboard();
+        if (tab === 'audit') renderAuditUsers();
     });
 });
 
@@ -418,8 +425,15 @@ function renderStory(code) {
 // ===== LEADERBOARD =====
 async function loadLeaderboard() {
     try {
-        const res = await fetch('/api/leaderboard');
-        const leaders = await res.json();
+        const users = JSON.parse(localStorage.getItem('ilManagedUsers') || '[]');
+        const leaders = [];
+        users.forEach(u => {
+            const progress = JSON.parse(localStorage.getItem('ilProgress_' + u.username) || '{}');
+            if (progress.bestScore && progress.bestScore > 0) {
+                leaders.push({ username: u.username, best_score: progress.bestScore, quiz_attempts: progress.quizAttempts || 0 });
+            }
+        });
+        leaders.sort((a, b) => b.best_score - a.best_score);
         const container = document.getElementById('leaderboardContent');
         if (leaders.length === 0) {
             container.innerHTML = '<p style="color:var(--text-secondary)">No scores yet. Be the first to complete the quiz!</p>';
@@ -430,7 +444,7 @@ async function loadLeaderboard() {
             <tbody>${leaders.map((l, i) => `
                 <tr>
                     <td class="${i < 3 ? 'rank-' + (i+1) : ''}">${i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : i+1}</td>
-                    <td>${l.display_name || l.username}</td>
+                    <td>${l.username}</td>
                     <td><strong>${l.best_score}</strong></td>
                     <td>${l.quiz_attempts}</td>
                 </tr>
@@ -716,8 +730,179 @@ document.getElementById('addonSearchInput').addEventListener('input', (e) => {
     renderSearchResults(e.target.value.trim());
 });
 
+// ===== AUDIT LOGS & USER MANAGEMENT =====
+function initAuditLogs() {
+    const session = JSON.parse(localStorage.getItem('ilSession') || 'null');
+    const navAudit = document.getElementById('navAuditLogs');
+    if (session && session.role === 'admin') {
+        navAudit.style.display = 'flex';
+    } else {
+        navAudit.style.display = 'none';
+    }
+}
+
+function renderAuditUsers() {
+    const container = document.getElementById('auditContent');
+    const users = JSON.parse(localStorage.getItem('ilManagedUsers') || '[]');
+    const shareLink = window.location.origin + '/login';
+
+    container.innerHTML = `
+        <div style="margin-bottom:24px;padding:16px;background:var(--bg-tertiary);border-radius:10px;border:1px solid var(--border);">
+            <h3 style="margin-bottom:8px;font-size:14px;color:var(--text-secondary);">🔗 Share Login Link</h3>
+            <div style="display:flex;gap:8px;align-items:center;">
+                <input type="text" value="${shareLink}" readonly style="flex:1;padding:10px 12px;border:1px solid var(--border);border-radius:6px;font-size:13px;background:var(--bg-primary);color:var(--text-primary);" id="shareLinkInput">
+                <button onclick="document.getElementById('shareLinkInput').select();document.execCommand('copy');" style="padding:10px 16px;background:var(--accent-primary);color:white;border:none;border-radius:6px;cursor:pointer;font-size:13px;font-weight:600;">Copy</button>
+            </div>
+        </div>
+
+        <div style="margin-bottom:24px;padding:20px;background:var(--bg-tertiary);border-radius:10px;border:1px solid var(--border);">
+            <h3 style="margin-bottom:14px;font-size:15px;">➕ Create New User</h3>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                <div>
+                    <label style="font-size:11px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;display:block;margin-bottom:4px;">Username</label>
+                    <input type="text" id="newUsername" placeholder="username" style="width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:6px;font-size:13px;background:var(--bg-primary);color:var(--text-primary);">
+                </div>
+                <div>
+                    <label style="font-size:11px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;display:block;margin-bottom:4px;">Email Prefix</label>
+                    <div style="display:flex;align-items:center;gap:0;">
+                        <input type="text" id="newEmailPrefix" placeholder="firstname" style="flex:1;padding:10px 12px;border:1px solid var(--border);border-radius:6px 0 0 6px;font-size:13px;background:var(--bg-primary);color:var(--text-primary);">
+                        <span style="padding:10px 8px;background:var(--border);border:1px solid var(--border);border-radius:0 6px 6px 0;font-size:12px;color:var(--text-secondary);">@icicilombard.com</span>
+                    </div>
+                </div>
+                <div>
+                    <label style="font-size:11px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;display:block;margin-bottom:4px;">Password</label>
+                    <input type="text" id="newPassword" placeholder="password" style="width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:6px;font-size:13px;background:var(--bg-primary);color:var(--text-primary);">
+                </div>
+                <div>
+                    <label style="font-size:11px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;display:block;margin-bottom:4px;">Role</label>
+                    <select id="newRole" style="width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:6px;font-size:13px;background:var(--bg-primary);color:var(--text-primary);">
+                        <option value="user">User</option>
+                        <option value="admin">Admin</option>
+                    </select>
+                </div>
+            </div>
+            <button onclick="createUser()" style="margin-top:14px;padding:10px 20px;background:#28a745;color:white;border:none;border-radius:6px;cursor:pointer;font-size:13px;font-weight:600;">Create User</button>
+            <span id="createUserMsg" style="margin-left:12px;font-size:12px;color:#28a745;"></span>
+        </div>
+
+        <div style="overflow-x:auto;">
+            <h3 style="margin-bottom:12px;font-size:15px;">👥 All Users</h3>
+            <table style="width:100%;border-collapse:collapse;font-size:13px;">
+                <thead>
+                    <tr style="background:var(--bg-tertiary);border-bottom:2px solid var(--border);">
+                        <th style="padding:10px 12px;text-align:left;font-weight:600;color:var(--text-secondary);text-transform:uppercase;font-size:11px;">Username</th>
+                        <th style="padding:10px 12px;text-align:left;font-weight:600;color:var(--text-secondary);text-transform:uppercase;font-size:11px;">Email</th>
+                        <th style="padding:10px 12px;text-align:left;font-weight:600;color:var(--text-secondary);text-transform:uppercase;font-size:11px;">Role</th>
+                        <th style="padding:10px 12px;text-align:left;font-weight:600;color:var(--text-secondary);text-transform:uppercase;font-size:11px;">Created</th>
+                        <th style="padding:10px 12px;text-align:left;font-weight:600;color:var(--text-secondary);text-transform:uppercase;font-size:11px;">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${users.map(u => `
+                        <tr style="border-bottom:1px solid var(--border);">
+                            <td style="padding:10px 12px;font-weight:500;">${u.username}</td>
+                            <td style="padding:10px 12px;color:var(--text-secondary);">${u.email || '-'}</td>
+                            <td style="padding:10px 12px;"><span style="padding:3px 10px;border-radius:12px;font-size:11px;font-weight:600;background:${u.role === 'admin' ? '#fff3cd' : '#d4edda'};color:${u.role === 'admin' ? '#856404' : '#155724'};">${u.role}</span></td>
+                            <td style="padding:10px 12px;color:var(--text-secondary);font-size:12px;">${u.createdAt ? new Date(u.createdAt).toLocaleDateString() : '-'}</td>
+                            <td style="padding:10px 12px;">${u.isDefault ? '<span style="font-size:11px;color:var(--text-secondary);">Default</span>' : '<button onclick="deleteUser(\'' + u.username + '\')" style="padding:4px 10px;background:#dc3545;color:white;border:none;border-radius:4px;cursor:pointer;font-size:11px;">Delete</button>'}</td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+        </div>
+    `;
+}
+
+function renderAuditLogs() {
+    const container = document.getElementById('auditContent');
+    const logs = JSON.parse(localStorage.getItem('ilLoginLogs') || '[]');
+
+    if (logs.length === 0) {
+        container.innerHTML = '<p style="color:var(--text-secondary);padding:20px;">No login activity recorded yet.</p>';
+        return;
+    }
+
+    container.innerHTML = `
+        <div style="overflow-x:auto;">
+            <table style="width:100%;border-collapse:collapse;font-size:13px;">
+                <thead>
+                    <tr style="background:var(--bg-tertiary);border-bottom:2px solid var(--border);">
+                        <th style="padding:10px 12px;text-align:left;font-weight:600;color:var(--text-secondary);text-transform:uppercase;font-size:11px;">Username</th>
+                        <th style="padding:10px 12px;text-align:left;font-weight:600;color:var(--text-secondary);text-transform:uppercase;font-size:11px;">Role</th>
+                        <th style="padding:10px 12px;text-align:left;font-weight:600;color:var(--text-secondary);text-transform:uppercase;font-size:11px;">Action</th>
+                        <th style="padding:10px 12px;text-align:left;font-weight:600;color:var(--text-secondary);text-transform:uppercase;font-size:11px;">Timestamp</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${logs.map(log => `
+                        <tr style="border-bottom:1px solid var(--border);">
+                            <td style="padding:10px 12px;font-weight:500;">${log.username}</td>
+                            <td style="padding:10px 12px;"><span style="padding:3px 10px;border-radius:12px;font-size:11px;font-weight:600;background:${log.role === 'admin' ? '#fff3cd' : '#d4edda'};color:${log.role === 'admin' ? '#856404' : '#155724'};">${log.role}</span></td>
+                            <td style="padding:10px 12px;"><span style="padding:3px 10px;border-radius:12px;font-size:11px;font-weight:600;background:${log.action === 'Login' ? '#d4edda' : '#f8d7da'};color:${log.action === 'Login' ? '#155724' : '#721c24'};">${log.action}</span></td>
+                            <td style="padding:10px 12px;color:var(--text-secondary);font-size:12px;">${new Date(log.timestamp).toLocaleString()}</td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+        </div>
+    `;
+}
+
+function createUser() {
+    const username = document.getElementById('newUsername').value.trim().toLowerCase();
+    const emailPrefix = document.getElementById('newEmailPrefix').value.trim().toLowerCase();
+    const password = document.getElementById('newPassword').value;
+    const role = document.getElementById('newRole').value;
+    const msgEl = document.getElementById('createUserMsg');
+
+    if (!username || !password) {
+        msgEl.style.color = '#dc3545';
+        msgEl.textContent = 'Username and password are required';
+        return;
+    }
+
+    const users = JSON.parse(localStorage.getItem('ilManagedUsers') || '[]');
+    if (users.find(u => u.username === username)) {
+        msgEl.style.color = '#dc3545';
+        msgEl.textContent = 'Username already exists';
+        return;
+    }
+
+    const email = (emailPrefix || username) + '@icicilombard.com';
+    users.push({ username, password, role, email, isDefault: false, createdAt: new Date().toISOString() });
+    localStorage.setItem('ilManagedUsers', JSON.stringify(users));
+
+    msgEl.style.color = '#28a745';
+    msgEl.textContent = 'User created successfully!';
+    document.getElementById('newUsername').value = '';
+    document.getElementById('newEmailPrefix').value = '';
+    document.getElementById('newPassword').value = '';
+
+    setTimeout(() => { msgEl.textContent = ''; }, 3000);
+    renderAuditUsers();
+}
+
+function deleteUser(username) {
+    if (!confirm('Delete user "' + username + '"? This cannot be undone.')) return;
+    let users = JSON.parse(localStorage.getItem('ilManagedUsers') || '[]');
+    users = users.filter(u => !(u.username === username && !u.isDefault));
+    localStorage.setItem('ilManagedUsers', JSON.stringify(users));
+    renderAuditUsers();
+}
+
+// Audit tab click handlers
+document.querySelectorAll('.audit-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+        document.querySelectorAll('.audit-tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        if (tab.dataset.audit === 'users') renderAuditUsers();
+        else renderAuditLogs();
+    });
+});
+
 // ===== INIT =====
 loadUser();
+initAuditLogs();
 renderRiskFlow();
 renderIncoterms();
 renderStoryChips();

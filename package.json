@@ -1,20 +1,7 @@
 {
   "name": "icici-lombard-training",
-  "version": "1.0.0",
-  "description": "ICICI Lombard Insurance Training Platform",
+  "version": "2.0.0",
   "main": "server.js",
-  "type": "commonjs",
-  "engines": {
-    "node": ">=18.0.0"
-  },
-  "scripts": {
-    "start": "node server.js",
-    "build": "echo 'No build step'"
-  },
-  "dependencies": {
-    "bcryptjs": "^2.4.3",
-    "express": "^4.18.2",
-    "express-session": "^1.17.3",
-    "pg": "^8.22.0"
-  }
+  "scripts": { "start": "node server.js" },
+  "dependencies": { "express": "^4.18.2" }
 }
