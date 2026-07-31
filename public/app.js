@@ -546,7 +546,7 @@ function renderLOBDashboard() {
     lobContent.innerHTML = `
         <div class="lob-description">${lobData.description}</div>
         <div class="lob-policies-section">
-            <h2>Policies in this LOB</h2>
+            <h2>📋 Products & Policies</h2>
             <div class="lob-policy-cards">
                 ${lobData.policies.map(p => `
                     <div class="lob-policy-card">
@@ -557,6 +557,21 @@ function renderLOBDashboard() {
                 `).join('')}
             </div>
         </div>
+        ${lobData.addons ? `
+        <div class="lob-policies-section" style="margin-top:32px;">
+            <h2>🔧 Add-on Covers & Extensions (${lobData.addons.length})</h2>
+            <p style="color:var(--text-secondary);margin-bottom:16px;font-size:14px;">Optional extensions that can be added to the base policy by paying additional premium</p>
+            <div class="lob-addon-cards">
+                ${lobData.addons.map(a => `
+                    <div class="lob-addon-card">
+                        <div class="addon-code">${a.code}</div>
+                        <div class="addon-name">${a.name}</div>
+                        <div class="addon-desc">${a.description}</div>
+                    </div>
+                `).join('')}
+            </div>
+        </div>
+        ` : ''}
     `;
 }
 
