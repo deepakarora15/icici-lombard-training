@@ -162,15 +162,15 @@ function requireAuth(req, res, next) {
 }
 
 // ===== STATIC FILES =====
-app.use('/app', requireAuth, express.static(path.join(__dirname, 'public'), { maxAge: '1h' }));
-app.use('/dashboard', requireAuth, express.static(path.join(__dirname, 'public'), { maxAge: '1h' }));
-app.get('/app/*', requireAuth, (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
-app.get('/dashboard/*', requireAuth, (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
+app.use('/app', express.static(path.join(__dirname, 'public'), { maxAge: '1h' }));
+app.use('/dashboard', express.static(path.join(__dirname, 'public'), { maxAge: '1h' }));
+app.get('/app/*', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
+app.get('/dashboard/*', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
 
 // ===== ROUTES =====
 app.get('/health', (req, res) => res.json({ status: 'ok', db: usePostgres ? 'postgresql' : 'memory' }));
-app.get('/', (req, res) => { if (req.session && req.session.userId) return res.redirect('/dashboard'); res.redirect('/login'); });
-app.get('/login', (req, res) => { if (req.session && req.session.userId) return res.redirect('/dashboard'); res.sendFile(path.join(__dirname, 'views', 'login.html')); });
+app.get('/', (req, res) => { res.redirect('/dashboard'); });
+app.get('/login', (req, res) => { res.redirect('/dashboard'); });
 
 // Register
 app.post('/api/register', async (req, res) => {
