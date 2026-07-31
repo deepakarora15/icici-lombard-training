@@ -561,7 +561,7 @@ function renderLOBLessons() {
                 <div class="lesson-icon">📋</div>
                 <div class="lesson-title-wrap">
                     <h3>${addon.code} — ${addon.name}</h3>
-                    <p>IRDA Ref: ${addon.irdaRef || ''} | Click to expand</p>
+                    <p>${addon.irdaRef ? 'IRDA Ref #' + addon.irdaRef + ' | ' : ''}Click to expand</p>
                 </div>
                 <div class="lesson-toggle">▼</div>
             </div>
