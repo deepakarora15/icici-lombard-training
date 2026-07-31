@@ -556,19 +556,26 @@ function renderLOBLessons() {
 
     const container = document.getElementById('lessonsContainer');
 
-    // Add search box for filtering within current LOB
-    const searchHtml = `<div class="lob-search-box" style="margin-bottom:20px;">
-        <input type="text" id="lobAddonSearch" placeholder="🔍 Search within ${config.name} add-ons..." style="width:100%;max-width:500px;padding:12px 16px;border:2px solid var(--border);border-radius:10px;font-size:15px;font-family:inherit;transition:border-color 0.2s;" onfocus="this.style.borderColor='var(--accent-primary)'" onblur="this.style.borderColor='var(--border)'">
-        <p style="font-size:12px;color:var(--text-secondary);margin-top:6px;">${lobData.addons.length} add-on covers available</p>
+    // Product slicer buttons
+    const productCodes = lobData.policies.map(p => p.code);
+    const slicerHtml = `<div class="product-slicer" style="margin-bottom:20px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;">
+        <span style="font-size:13px;font-weight:600;color:var(--text-secondary);margin-right:8px;">Filter by Product:</span>
+        <button class="slicer-btn active" data-product="all" onclick="filterAddonsByProduct('all')">All (${lobData.addons.length})</button>
+        ${productCodes.map(code => `<button class="slicer-btn" data-product="${code}" onclick="filterAddonsByProduct('${code}')">${code}</button>`).join('')}
     </div>`;
 
-    container.innerHTML = searchHtml + lobData.addons.map((addon, idx) => `
-        <div class="lesson-card" data-lesson="${idx}" data-search="${(addon.code + ' ' + addon.name + ' ' + addon.description + ' ' + (addon.whoShouldTake||'')).toLowerCase()}">
+    // Search box
+    const searchHtml = `<div class="lob-search-box" style="margin-bottom:20px;">
+        <input type="text" id="lobAddonSearch" placeholder="🔍 Search within ${config.name} add-ons..." style="width:100%;max-width:500px;padding:12px 16px;border:2px solid var(--border);border-radius:10px;font-size:15px;font-family:inherit;transition:border-color 0.2s;" onfocus="this.style.borderColor='var(--accent-primary)'" onblur="this.style.borderColor='var(--border)'">
+    </div>`;
+
+    container.innerHTML = slicerHtml + searchHtml + lobData.addons.map((addon, idx) => `
+        <div class="lesson-card" data-lesson="${idx}" data-products="${(addon.relevantProducts || []).join(',')}" data-search="${(addon.code + ' ' + addon.name + ' ' + addon.description + ' ' + (addon.whoShouldTake||'')).toLowerCase()}">
             <div class="lesson-header">
                 <div class="lesson-icon">📋</div>
                 <div class="lesson-title-wrap">
                     <h3>${addon.code} — ${addon.name}</h3>
-                    <p>${addon.irdaRef ? 'IRDA Ref #' + addon.irdaRef + ' | ' : ''}Click to expand</p>
+                    <p>${addon.irdaRef ? 'IRDA Ref #' + addon.irdaRef + ' | ' : ''}${addon.relevantProducts && addon.relevantProducts.length ? '<span style="color:var(--accent-teal);font-weight:600;">Applies to: ' + addon.relevantProducts.join(', ') + '</span>' : 'Applies to: All Products'}</p>
                 </div>
                 <div class="lesson-toggle">▼</div>
             </div>
@@ -599,6 +606,22 @@ function renderLOBLessons() {
         header.addEventListener('click', () => {
             header.parentElement.classList.toggle('open');
         });
+    });
+}
+
+// Product slicer filter
+function filterAddonsByProduct(product) {
+    const container = document.getElementById('lessonsContainer');
+    // Update active button
+    container.querySelectorAll('.slicer-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.product === product);
+    });
+    // Filter cards
+    container.querySelectorAll('.lesson-card').forEach(card => {
+        if (product === 'all') { card.style.display = ''; return; }
+        const prods = card.dataset.products || '';
+        // Show if: addon lists this product, OR addon has no products (applies to all)
+        card.style.display = (!prods || prods.includes(product)) ? '' : 'none';
     });
 }
 
