@@ -454,34 +454,47 @@ function updateProgress() {
     document.getElementById('globalProgressText').textContent = `${pct}%`;
 }
 
-// ===== LOB SWITCHER =====
-document.getElementById('lobSelector').addEventListener('change', (e) => {
-    currentLOB = e.target.value;
-    const config = lobConfig[currentLOB];
-    document.getElementById('lobSubtitle').textContent = config.subtitle;
-    document.title = `ICICI Lombard — ${config.name} Training`;
+// ===== LOB TABS =====
+const lobTabs = document.querySelectorAll('.lob-tab');
+const marineOnlyNavTabs = ['stories', 'incoterms', 'insurance'];
 
-    // Show/hide marine-specific tabs
-    const marineTabs = ['stories'];
-    const allNavItems = document.querySelectorAll('.nav-links li');
+lobTabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+        const lob = tab.dataset.lob;
+        currentLOB = lob;
 
-    allNavItems.forEach(item => {
-        const tab = item.dataset.tab;
-        if (marineTabs.includes(tab)) {
-            item.style.display = currentLOB === 'marine' ? 'flex' : 'none';
+        // Update active tab
+        lobTabs.forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+
+        const config = lobConfig[currentLOB];
+        document.getElementById('lobSubtitle').textContent = config.subtitle;
+        document.title = `ICICI Lombard — ${config.name} Training`;
+
+        // Show/hide marine-specific nav items
+        const allNavItems = document.querySelectorAll('.nav-links li');
+        allNavItems.forEach(item => {
+            const navTab = item.dataset.tab;
+            if (marineOnlyNavTabs.includes(navTab)) {
+                item.style.display = currentLOB === 'marine' ? 'flex' : 'none';
+            }
+        });
+
+        // Re-render content based on LOB
+        renderLOBDashboard();
+        if (currentLOB === 'marine') {
+            renderIncoterms();
+            renderLessons();
+        } else {
+            renderLOBLessons();
         }
+
+        // Switch to dashboard
+        document.querySelectorAll('.nav-links li').forEach(l => l.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+        document.querySelector('[data-tab="dashboard"]').classList.add('active');
+        document.getElementById('dashboard').classList.add('active');
     });
-
-    // Re-render content based on LOB
-    renderLOBDashboard();
-    renderLOBExplorer();
-    renderLOBLessons();
-
-    // Switch to dashboard
-    document.querySelectorAll('.nav-links li').forEach(l => l.classList.remove('active'));
-    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-    document.querySelector('[data-tab="dashboard"]').classList.add('active');
-    document.getElementById('dashboard').classList.add('active');
 });
 
 function getLOBData() {
@@ -489,8 +502,6 @@ function getLOBData() {
         case 'fire': return fireData;
         case 'engineering': return engineeringData;
         case 'liability': return liabilityData;
-        case 'health': return healthData;
-        case 'motor': return motorData;
         default: return null;
     }
 }
@@ -501,27 +512,54 @@ function renderLOBDashboard() {
     header.innerHTML = `<h1>${config.icon} ${config.name} Dashboard</h1><p>ICICI Lombard — ${config.description}</p>`;
 
     if (currentLOB === 'marine') {
+        // Hide LOB content if it exists
+        const lobContent = document.getElementById('lobDashboardContent');
+        if (lobContent) lobContent.style.display = 'none';
         // Restore marine dashboard content
         document.querySelector('#dashboard .stats-grid').style.display = '';
+        document.querySelector('#dashboard .stats-grid').innerHTML = `
+            <div class="stat-card" id="statIncoterms"><div class="stat-icon blue"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/></svg></div><div class="stat-info"><h3>11</h3><p>Incoterms 2020</p></div></div>
+            <div class="stat-card" id="statInsurance"><div class="stat-icon green"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div><div class="stat-info"><h3>6</h3><p>Insurance Clauses</p></div></div>
+            <div class="stat-card" id="statLearning"><div class="stat-icon purple"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg></div><div class="stat-info"><h3>11</h3><p>Learning Modules</p></div></div>
+            <div class="stat-card" id="statQuiz"><div class="stat-icon orange"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div><div class="stat-info"><h3 id="quizScoreDisplay">0</h3><p>Best Quiz Score</p></div></div>
+        `;
         document.querySelectorAll('#dashboard .dashboard-section').forEach(s => s.style.display = '');
         return;
     }
 
-    // For other LOBs, show their stats
-    const data = getLOBData();
-    if (!data) return;
+    // For non-Marine LOBs, show description + policy cards
+    const lobData = lobPolicies[currentLOB];
+    if (!lobData) return;
 
     const statsGrid = document.querySelector('#dashboard .stats-grid');
-    statsGrid.style.display = 'grid';
-    statsGrid.innerHTML = `
-        <div class="stat-card"><div class="stat-icon blue"><span style="font-size:22px">${config.icon}</span></div><div class="stat-info"><h3>${data.explorerCards.length}</h3><p>Concepts & Clauses</p></div></div>
-        <div class="stat-card"><div class="stat-icon green"><span style="font-size:22px">📚</span></div><div class="stat-info"><h3>${data.lessons.length}</h3><p>Training Modules</p></div></div>
-        <div class="stat-card"><div class="stat-icon purple"><span style="font-size:22px">❓</span></div><div class="stat-info"><h3>${data.quizQuestions.length}</h3><p>Quiz Questions</p></div></div>
-        <div class="stat-card"><div class="stat-icon orange"><span style="font-size:22px">⭐</span></div><div class="stat-info"><h3 id="quizScoreDisplay">0</h3><p>Best Quiz Score</p></div></div>
-    `;
+    statsGrid.style.display = 'none';
 
     // Hide marine-specific dashboard sections
     document.querySelectorAll('#dashboard .dashboard-section').forEach(s => s.style.display = 'none');
+
+    // Check if LOB content container exists, create if not
+    let lobContent = document.getElementById('lobDashboardContent');
+    if (!lobContent) {
+        lobContent = document.createElement('div');
+        lobContent.id = 'lobDashboardContent';
+        document.querySelector('#dashboard').appendChild(lobContent);
+    }
+    lobContent.style.display = 'block';
+    lobContent.innerHTML = `
+        <div class="lob-description">${lobData.description}</div>
+        <div class="lob-policies-section">
+            <h2>Policies in this LOB</h2>
+            <div class="lob-policy-cards">
+                ${lobData.policies.map(p => `
+                    <div class="lob-policy-card">
+                        <div class="policy-code">${p.code}</div>
+                        <div class="policy-name">${p.name}</div>
+                        <div class="policy-desc">${p.description}</div>
+                    </div>
+                `).join('')}
+            </div>
+        </div>
+    `;
 }
 
 function renderLOBExplorer() {
