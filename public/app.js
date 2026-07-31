@@ -555,8 +555,15 @@ function renderLOBLessons() {
     header.innerHTML = `<h1>${config.icon} ${config.name} — Add-on Covers & Extensions</h1><p>Click any add-on to learn: what it covers, who needs it, and what happens if you don't opt for it</p>`;
 
     const container = document.getElementById('lessonsContainer');
-    container.innerHTML = lobData.addons.map((addon, idx) => `
-        <div class="lesson-card" data-lesson="${idx}">
+
+    // Add search box for filtering within current LOB
+    const searchHtml = `<div class="lob-search-box" style="margin-bottom:20px;">
+        <input type="text" id="lobAddonSearch" placeholder="🔍 Search within ${config.name} add-ons..." style="width:100%;max-width:500px;padding:12px 16px;border:2px solid var(--border);border-radius:10px;font-size:15px;font-family:inherit;transition:border-color 0.2s;" onfocus="this.style.borderColor='var(--accent-primary)'" onblur="this.style.borderColor='var(--border)'">
+        <p style="font-size:12px;color:var(--text-secondary);margin-top:6px;">${lobData.addons.length} add-on covers available</p>
+    </div>`;
+
+    container.innerHTML = searchHtml + lobData.addons.map((addon, idx) => `
+        <div class="lesson-card" data-lesson="${idx}" data-search="${(addon.code + ' ' + addon.name + ' ' + addon.description + ' ' + (addon.whoShouldTake||'')).toLowerCase()}">
             <div class="lesson-header">
                 <div class="lesson-icon">📋</div>
                 <div class="lesson-title-wrap">
@@ -574,6 +581,19 @@ function renderLOBLessons() {
             </div>
         </div>
     `).join('');
+
+    // LOB-specific search filtering
+    const searchInput = document.getElementById('lobAddonSearch');
+    if (searchInput) {
+        searchInput.addEventListener('input', (e) => {
+            const q = e.target.value.toLowerCase().trim();
+            container.querySelectorAll('.lesson-card').forEach(card => {
+                if (!q || q.length < 2) { card.style.display = ''; return; }
+                const searchData = card.dataset.search || '';
+                card.style.display = searchData.includes(q) ? '' : 'none';
+            });
+        });
+    }
 
     container.querySelectorAll('.lesson-header').forEach(header => {
         header.addEventListener('click', () => {
