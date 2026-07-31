@@ -43,7 +43,7 @@ app.use(session({
         secure: process.env.NODE_ENV === 'production',
         httpOnly: true,
         maxAge: 7 * 24 * 60 * 60 * 1000,
-        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
+        sameSite: 'lax'
     }
 }));
 
@@ -56,11 +56,11 @@ function requireAuth(req, res, next) {
     res.redirect('/login');
 }
 
-// Static files with no-cache for dev
+// Static files
 app.use('/app', requireAuth, express.static(path.join(__dirname, 'public'), {
     etag: true,
     lastModified: true,
-    maxAge: 0
+    maxAge: process.env.NODE_ENV === 'production' ? '1h' : 0
 }));
 
 app.get('/app/*', requireAuth, (req, res) => {
@@ -68,6 +68,8 @@ app.get('/app/*', requireAuth, (req, res) => {
 });
 
 // Routes
+app.get('/health', (req, res) => res.json({ status: 'ok' }));
+
 app.get('/', (req, res) => {
     if (req.session && req.session.userId) return res.redirect('/app');
     res.redirect('/login');
