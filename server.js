@@ -20,7 +20,11 @@ function loadDBFromDisk() {
 }
 
 function persistDB() {
-    fs.writeFile(DB_PATH, JSON.stringify(db, null, 2), () => {});
+    try {
+        fs.writeFile(DB_PATH, JSON.stringify(db, null, 2), (err) => {
+            if (err) console.log('DB write skipped (read-only filesystem)');
+        });
+    } catch (e) { /* ignore on read-only filesystem */ }
 }
 
 // Load once at startup
@@ -31,16 +35,14 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Trust proxy in production (Render uses reverse proxy)
-if (process.env.NODE_ENV === 'production') {
-    app.set('trust proxy', 1);
-}
+app.set('trust proxy', 1);
 
 app.use(session({
     secret: process.env.SESSION_SECRET || 'marine-clauses-secret-change-in-prod',
     resave: false,
     saveUninitialized: false,
     cookie: {
-        secure: process.env.NODE_ENV === 'production',
+        secure: false,
         httpOnly: true,
         maxAge: 7 * 24 * 60 * 60 * 1000,
         sameSite: 'lax'
