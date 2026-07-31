@@ -229,7 +229,8 @@ document.getElementById('quizUserName').addEventListener('keydown', (e) => {
 });
 
 function startQuiz() {
-    shuffledQuestions = shuffleArray(quizQuestions).slice(0, 10);
+    const questions = currentLOB === 'marine' ? quizQuestions : (lobQuizQuestions[currentLOB] || quizQuestions);
+    shuffledQuestions = shuffleArray(questions).slice(0, 10);
     currentQuestion = 0;
     score = 0;
     answered = [];
