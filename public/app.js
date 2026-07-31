@@ -91,58 +91,6 @@ function renderRiskFlow() {
     `).join('');
 }
 
-// ===== INCOTERMS EXPLORER =====
-function renderIncoterms(filter = 'all') {
-    const grid = document.getElementById('incotermsGrid');
-    const filtered = filter === 'all' ? incotermsData : incotermsData.filter(i => i.transport === filter);
-    grid.innerHTML = filtered.map(item => `
-        <div class="incoterm-card" data-code="${item.code}">
-            <span class="transport-badge">${item.transport === 'sea' ? '🚢 Sea' : '🚛 Any'}</span>
-            <div class="code">${item.code}</div>
-            <div class="name">${item.name}</div>
-            <div class="desc">${item.description}</div>
-        </div>
-    `).join('');
-    grid.querySelectorAll('.incoterm-card').forEach(card => {
-        card.addEventListener('click', () => openIncotermModal(card.dataset.code));
-    });
-}
-
-function openIncotermModal(code) {
-    const item = incotermsData.find(i => i.code === code);
-    if (!item) return;
-    const modal = document.getElementById('incotermModal');
-    document.getElementById('modalBody').innerHTML = `
-        <div class="modal-title">${item.code} — ${item.name}</div>
-        <div class="modal-subtitle">${item.description}</div>
-        <div class="modal-section"><h4>Risk Transfer Point</h4><p>${item.riskTransfer}</p></div>
-        <div class="modal-section"><h4>Cost Allocation</h4><p>${item.costAllocation}</p></div>
-        <div class="responsibility-grid">
-            <div class="resp-card seller"><h5>Seller Responsibilities</h5><p>${item.sellerResponsibilities}</p></div>
-            <div class="resp-card buyer"><h5>Buyer Responsibilities</h5><p>${item.buyerResponsibilities}</p></div>
-        </div>
-        <div class="modal-section" style="margin-top:20px"><h4>Notes</h4><p>${item.notes}</p></div>
-        <div class="modal-section"><h4>Risk Distribution</h4>
-            <div class="flow-bar-container" style="height:28px;border-radius:6px;overflow:hidden;margin-top:8px;">
-                <div class="flow-bar-seller" style="width:${item.sellerRiskPercent}%">Seller ${item.sellerRiskPercent}%</div>
-                <div class="flow-bar-buyer" style="width:${item.buyerRiskPercent}%">Buyer ${item.buyerRiskPercent}%</div>
-            </div>
-        </div>
-    `;
-    modal.classList.add('active');
-}
-
-document.getElementById('modalClose').addEventListener('click', () => document.getElementById('incotermModal').classList.remove('active'));
-document.getElementById('incotermModal').addEventListener('click', (e) => { if (e.target === e.currentTarget) e.currentTarget.classList.remove('active'); });
-
-document.querySelectorAll('.filter-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        renderIncoterms(btn.dataset.filter);
-    });
-});
-
 // ===== INSURANCE TABS =====
 function renderInsuranceTab(tab = 'marine') {
     const data = insuranceTabContent[tab];
@@ -162,13 +110,7 @@ function renderInsuranceTab(tab = 'marine') {
     `;
 }
 
-document.querySelectorAll('.ins-tab').forEach(tab => {
-    tab.addEventListener('click', () => {
-        document.querySelectorAll('.ins-tab').forEach(t => t.classList.remove('active'));
-        tab.classList.add('active');
-        renderInsuranceTab(tab.dataset.ins);
-    });
-});
+
 
 // ===== LEARNING MODULE =====
 function renderLessons() {
@@ -193,6 +135,33 @@ function renderLessons() {
             saveProgress(undefined, openLessons);
         });
     });
+
+    // After the lessons cards, also render Insurance Clauses as part of learning
+    if (typeof insuranceTabContent !== 'undefined') {
+        const insSection = document.createElement('div');
+        insSection.style.marginTop = '32px';
+        insSection.innerHTML = `
+            <h2 style="font-size:20px;font-weight:700;margin-bottom:16px;">📋 Insurance Clauses Reference</h2>
+            <div class="ins-tabs">
+                <button class="ins-tab active" data-ins="marine">🚢 Marine</button>
+                <button class="ins-tab" data-ins="fire">🔥 Fire</button>
+                <button class="ins-tab" data-ins="engineering">⚙️ Engineering</button>
+                <button class="ins-tab" data-ins="liability">⚖️ Liability</button>
+            </div>
+            <div id="insContent"></div>
+        `;
+        container.appendChild(insSection);
+
+        // Re-attach insurance tab handlers
+        insSection.querySelectorAll('.ins-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                insSection.querySelectorAll('.ins-tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                renderInsuranceTab(tab.dataset.ins);
+            });
+        });
+        renderInsuranceTab('marine');
+    }
 }
 
 // ===== QUIZ ENGINE =====
@@ -468,7 +437,7 @@ function updateProgress() {
 
 // ===== LOB TABS =====
 const lobTabs = document.querySelectorAll('.lob-tab');
-const marineOnlyNavTabs = ['stories', 'incoterms', 'insurance'];
+const marineOnlyNavTabs = ['stories'];
 
 lobTabs.forEach(tab => {
     tab.addEventListener('click', () => {
@@ -495,7 +464,6 @@ lobTabs.forEach(tab => {
         // Re-render content based on LOB
         renderLOBDashboard();
         if (currentLOB === 'marine') {
-            renderIncoterms();
             renderLessons();
         } else {
             renderLOBLessons();
@@ -572,71 +540,6 @@ function renderLOBDashboard() {
             </div>
         </div>
     `;
-}
-
-function renderLOBExplorer() {
-    if (currentLOB === 'marine') {
-        renderIncoterms();
-        return;
-    }
-    const data = getLOBData();
-    if (!data) return;
-
-    const grid = document.getElementById('incotermsGrid');
-    const header = document.querySelector('#incoterms .page-header');
-    const config = lobConfig[currentLOB];
-    header.innerHTML = `<h1>${config.icon} ${config.name} — Explorer</h1><p>Click any card to learn more about each concept</p>`;
-
-    // Update filter buttons
-    const categories = [...new Set(data.explorerCards.map(c => c.category))];
-    const filterBar = document.querySelector('#incoterms .filter-bar');
-    filterBar.innerHTML = `<button class="filter-btn active" data-filter="all">All</button>` +
-        categories.map(cat => `<button class="filter-btn" data-filter="${cat}">${cat.charAt(0).toUpperCase() + cat.slice(1)}</button>`).join('');
-
-    filterBar.querySelectorAll('.filter-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            filterBar.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            renderLOBCards(btn.dataset.filter);
-        });
-    });
-
-    renderLOBCards('all');
-}
-
-function renderLOBCards(filter) {
-    const data = getLOBData();
-    if (!data) return;
-    const grid = document.getElementById('incotermsGrid');
-    const filtered = filter === 'all' ? data.explorerCards : data.explorerCards.filter(c => c.category === filter);
-
-    grid.innerHTML = filtered.map(item => `
-        <div class="incoterm-card" data-code="${item.code}">
-            <span class="transport-badge">${item.category}</span>
-            <div class="code">${item.code}</div>
-            <div class="name">${item.name}</div>
-            <div class="desc">${item.description}</div>
-        </div>
-    `).join('');
-
-    grid.querySelectorAll('.incoterm-card').forEach(card => {
-        card.addEventListener('click', () => {
-            const item = data.explorerCards.find(i => i.code === card.dataset.code);
-            if (!item) return;
-            const modal = document.getElementById('incotermModal');
-            document.getElementById('modalBody').innerHTML = `
-                <div class="modal-title">${item.code} — ${item.name}</div>
-                <div class="modal-subtitle">${item.description}</div>
-                <div class="modal-section"><h4>Coverage / Risk Transfer</h4><p>${item.riskTransfer}</p></div>
-                <div class="responsibility-grid">
-                    <div class="resp-card seller"><h5>Key Responsibilities</h5><p>${item.sellerResponsibilities}</p></div>
-                    <div class="resp-card buyer"><h5>Policyholder Duties</h5><p>${item.buyerResponsibilities}</p></div>
-                </div>
-                <div class="modal-section" style="margin-top:20px"><h4>Important Notes</h4><p>${item.notes}</p></div>
-            `;
-            modal.classList.add('active');
-        });
-    });
 }
 
 function renderLOBLessons() {
@@ -904,8 +807,6 @@ document.querySelectorAll('.audit-tab').forEach(tab => {
 loadUser();
 initAuditLogs();
 renderRiskFlow();
-renderIncoterms();
 renderStoryChips();
 renderStory('EXW');
-renderInsuranceTab('marine');
 renderLessons();

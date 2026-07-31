@@ -36,8 +36,7 @@
             <ul class="nav-links">
                 <li class="active" data-tab="dashboard"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg><span>Dashboard</span></li>
                 <li data-tab="stories"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/><line x1="8" y1="7" x2="16" y2="7"/><line x1="8" y1="11" x2="14" y2="11"/></svg><span>Incoterms Stories</span></li>
-                <li data-tab="incoterms"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg><span>Incoterms Explorer</span></li>
-                <li data-tab="insurance"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg><span>Insurance Clauses</span></li>
+
                 <li data-tab="learning"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg><span>Learning Module</span></li>
                 <li data-tab="quiz"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg><span>Quiz Challenge</span></li>
                 <li data-tab="search"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><span>Search Add-ons</span></li>
@@ -86,25 +85,7 @@
                 <div class="story-viewer" id="storyViewer"></div>
             </section>
 
-            <!-- Incoterms Explorer -->
-            <section id="incoterms" class="tab-content">
-                <div class="page-header"><h1>Incoterms 2020 Explorer</h1><p>Click on any Incoterm to explore details</p></div>
-                <div class="filter-bar"><button class="filter-btn active" data-filter="all">All</button><button class="filter-btn" data-filter="any">Any Transport</button><button class="filter-btn" data-filter="sea">Sea Only</button></div>
-                <div class="incoterms-grid" id="incotermsGrid"></div>
-                <div class="modal-overlay" id="incotermModal"><div class="modal-content"><button class="modal-close" id="modalClose">&times;</button><div id="modalBody"></div></div></div>
-            </section>
 
-            <!-- Insurance Clauses -->
-            <section id="insurance" class="tab-content">
-                <div class="page-header"><h1>Insurance Clauses & Coverage</h1><p>Detailed coverage information across all lines of business</p></div>
-                <div class="ins-tabs">
-                    <button class="ins-tab active" data-ins="marine">🚢 Marine</button>
-                    <button class="ins-tab" data-ins="fire">🔥 Fire</button>
-                    <button class="ins-tab" data-ins="engineering">⚙️ Engineering</button>
-                    <button class="ins-tab" data-ins="liability">⚖️ Liability</button>
-                </div>
-                <div class="ins-content" id="insContent"></div>
-            </section>
 
             <!-- Learning Module -->
             <section id="learning" class="tab-content">
