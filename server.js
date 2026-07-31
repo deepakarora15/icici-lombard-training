@@ -63,7 +63,18 @@ app.use('/app', requireAuth, express.static(path.join(__dirname, 'public'), {
     maxAge: process.env.NODE_ENV === 'production' ? '1h' : 0
 }));
 
+// Also serve at root for logged-in users
+app.use('/dashboard', requireAuth, express.static(path.join(__dirname, 'public'), {
+    etag: true,
+    lastModified: true,
+    maxAge: process.env.NODE_ENV === 'production' ? '1h' : 0
+}));
+
 app.get('/app/*', requireAuth, (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+app.get('/dashboard/*', requireAuth, (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
@@ -71,12 +82,12 @@ app.get('/app/*', requireAuth, (req, res) => {
 app.get('/health', (req, res) => res.json({ status: 'ok' }));
 
 app.get('/', (req, res) => {
-    if (req.session && req.session.userId) return res.redirect('/app');
+    if (req.session && req.session.userId) return res.redirect('/dashboard');
     res.redirect('/login');
 });
 
 app.get('/login', (req, res) => {
-    if (req.session && req.session.userId) return res.redirect('/app');
+    if (req.session && req.session.userId) return res.redirect('/dashboard');
     res.sendFile(path.join(__dirname, 'views', 'login.html'));
 });
 
@@ -106,7 +117,7 @@ app.post('/api/register', async (req, res) => {
         req.session.userId = newUser.id;
         req.session.username = newUser.username;
         req.session.displayName = newUser.displayName;
-        res.json({ success: true, redirect: '/app' });
+        res.json({ success: true, redirect: '/dashboard' });
     } catch (err) {
         res.status(500).json({ error: 'Registration failed' });
     }
@@ -127,7 +138,7 @@ app.post('/api/login', async (req, res) => {
         req.session.userId = user.id;
         req.session.username = user.username;
         req.session.displayName = user.displayName;
-        res.json({ success: true, redirect: '/app' });
+        res.json({ success: true, redirect: '/dashboard' });
     } catch (err) {
         res.status(500).json({ error: 'Login failed' });
     }
