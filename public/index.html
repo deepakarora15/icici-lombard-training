@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ICICI Lombard — Insurance Training Platform</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="styles.css?v=8">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+</head>
+<body>
+    <div class="app-container">
+        <nav class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <svg width="36" height="36" viewBox="0 0 40 40" fill="none">
+                        <rect width="40" height="40" rx="8" fill="#B02A30"/>
+                        <path d="M10 28 Q20 12 30 28" stroke="#F99D27" stroke-width="3" fill="none" stroke-linecap="round"/>
+                        <path d="M10 32 Q20 18 30 32" stroke="#F99D27" stroke-width="2" fill="none" opacity="0.5" stroke-linecap="round"/>
+                        <circle cx="20" cy="14" r="3" fill="#F99D27"/>
+                    </svg>
+                    <div class="logo-text">
+                        <span class="brand-name">ICICI Lombard</span>
+                        <span class="brand-sub" id="lobSubtitle">Insurance Training</span>
+                    </div>
+                </div>
+                <!-- LOB Switcher -->
+                <div class="lob-switcher">
+                    <select id="lobSelector">
+                        <option value="marine">🚢 Marine</option>
+                        <option value="fire">🔥 Fire</option>
+                        <option value="engineering">⚙️ Engineering</option>
+                        <option value="liability">⚖️ Liability</option>
+                        <option value="health">🏥 Health</option>
+                        <option value="motor">🚗 Motor</option>
+                    </select>
+                </div>
+            </div>
+            <ul class="nav-links">
+                <li class="active" data-tab="dashboard"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg><span>Dashboard</span></li>
+                <li data-tab="stories"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/><line x1="8" y1="7" x2="16" y2="7"/><line x1="8" y1="11" x2="14" y2="11"/></svg><span>Incoterms Stories</span></li>
+                <li data-tab="incoterms"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg><span>Incoterms Explorer</span></li>
+                <li data-tab="insurance"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg><span>Insurance Matrix</span></li>
+                <li data-tab="learning"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg><span>Learning Module</span></li>
+                <li data-tab="quiz"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg><span>Quiz Challenge</span></li>
+                <li data-tab="leaderboard"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg><span>Leaderboard</span></li>
+            </ul>
+            <div class="sidebar-footer">
+                <div class="progress-widget">
+                    <span>Learning Progress</span>
+                    <div class="progress-bar"><div class="progress-fill" id="globalProgress"></div></div>
+                    <span class="progress-text" id="globalProgressText">0%</span>
+                </div>
+            </div>
+        </nav>
+
+        <main class="main-content">
+            <!-- User Bar -->
+            <div class="user-bar">
+                <div class="user-info">
+                    <div class="user-avatar" id="userAvatar">U</div>
+                    <div class="user-name" id="userName">User <small>Loading...</small></div>
+                </div>
+                <button class="btn-logout" id="logoutBtn">Sign Out</button>
+            </div>
+
+            <!-- Dashboard -->
+            <section id="dashboard" class="tab-content active">
+                <div class="page-header"><h1>Marine Insurance & Incoterms Dashboard</h1><p>ICICI Lombard — Your learning hub for international trade terms and marine insurance clauses</p></div>
+                <div class="stats-grid">
+                    <div class="stat-card" id="statIncoterms"><div class="stat-icon blue"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/></svg></div><div class="stat-info"><h3>11</h3><p>Incoterms 2020</p></div><div class="stat-tooltip"><strong>11 Incoterms (2020 Edition)</strong>Defined by the International Chamber of Commerce (ICC). Split into 7 terms for any transport mode (EXW, FCA, CPT, CIP, DAP, DPU, DDP) and 4 sea-only terms (FAS, FOB, CFR, CIF). They define who pays and who bears risk.</div></div>
+                    <div class="stat-card" id="statInsurance"><div class="stat-icon green"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div><div class="stat-info"><h3>6</h3><p>Insurance Clauses</p></div><div class="stat-tooltip"><strong>6 Insurance Clause Types</strong>ICC (A) All Risks, ICC (B) Named Perils, ICC (C) Major Perils for marine transit. ITC (A), ITC (B), ITC (C) for inland transit. Coverage ranges from comprehensive to basic depending on the clause chosen.</div></div>
+                    <div class="stat-card" id="statLearning"><div class="stat-icon purple"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg></div><div class="stat-info"><h3>11</h3><p>Learning Modules</p></div><div class="stat-tooltip"><strong>11 Learning Modules</strong>Covers: Introduction to Incoterms, Risk vs Cost Transfer, Marine Insurance overview, Choosing the Right Incoterm, Insurance-Incoterm Matrix, ICC (A) All Risks, ICC (B) Named Perils, ICC (C) Major Perils, ITC (A) Inland All Risks, ITC (B) & (C) Limited Inland, and ICC vs ITC Comparison.</div></div>
+                    <div class="stat-card" id="statQuiz"><div class="stat-icon orange"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div><div class="stat-info"><h3 id="quizScoreDisplay">0</h3><p>Best Quiz Score</p></div><div class="stat-tooltip"><strong>Quiz Challenge</strong>Test your knowledge with 10 randomly selected questions from a pool of 15. Earn 10 points per correct answer. Max score: 100. Your best score is saved and shown on the leaderboard!</div></div>
+                </div>
+                <div class="dashboard-section"><h2>Risk Transfer Flow — Seller vs Buyer</h2><div class="risk-flow-container"><div class="flow-legend"><span class="legend-seller">● Seller Risk</span><span class="legend-buyer">● Buyer Risk</span></div><div class="flow-chart" id="riskFlowChart"></div></div></div>
+                <div class="dashboard-section"><h2>Quick Reference — Incoterm Groups</h2><div class="group-cards"><div class="group-card group-e"><h3>Group E</h3><p>Departure</p><span class="badge">EXW</span></div><div class="group-card group-f"><h3>Group F</h3><p>Main Carriage Unpaid</p><span class="badge">FCA</span><span class="badge">FAS</span><span class="badge">FOB</span></div><div class="group-card group-c"><h3>Group C</h3><p>Main Carriage Paid</p><span class="badge">CPT</span><span class="badge">CIP</span><span class="badge">CFR</span><span class="badge">CIF</span></div><div class="group-card group-d"><h3>Group D</h3><p>Arrival</p><span class="badge">DAP</span><span class="badge">DPU</span><span class="badge">DDP</span></div></div></div>
+            </section>
+
+            <!-- Incoterms Stories (Animated) -->
+            <section id="stories" class="tab-content">
+                <div class="page-header"><h1>Incoterms — Visual Stories</h1><p>Follow the cargo journey and understand where risk and cost transfer between seller and buyer</p></div>
+                <div class="story-selector">
+                    <label>Choose an Incoterm:</label>
+                    <div class="story-chips" id="storyChips"></div>
+                </div>
+                <div class="story-viewer" id="storyViewer"></div>
+            </section>
+
+            <!-- Incoterms Explorer -->
+            <section id="incoterms" class="tab-content">
+                <div class="page-header"><h1>Incoterms 2020 Explorer</h1><p>Click on any Incoterm to explore details</p></div>
+                <div class="filter-bar"><button class="filter-btn active" data-filter="all">All</button><button class="filter-btn" data-filter="any">Any Transport</button><button class="filter-btn" data-filter="sea">Sea Only</button></div>
+                <div class="incoterms-grid" id="incotermsGrid"></div>
+                <div class="modal-overlay" id="incotermModal"><div class="modal-content"><button class="modal-close" id="modalClose">&times;</button><div id="modalBody"></div></div></div>
+            </section>
+
+            <!-- Insurance Matrix -->
+            <section id="insurance" class="tab-content">
+                <div class="page-header"><h1>Insurance Clause Matrix</h1><p>Which insurance clauses apply based on Incoterm and transit type</p></div>
+                <div class="matrix-toggle"><button class="toggle-btn active" data-matrix="inland">Inland Transit (ITC)</button><button class="toggle-btn" data-matrix="marine">Marine Transit (ICC)</button></div>
+                <div class="matrix-container" id="matrixContainer"></div>
+                <div class="matrix-legend"><span class="legend-item recommended">Recommended</span><span class="legend-item acceptable">Acceptable</span><span class="legend-item limited">Limited</span><span class="legend-item not-recommended">Not Recommended</span><span class="legend-item mandatory">Mandatory</span></div>
+            </section>
+
+            <!-- Learning Module -->
+            <section id="learning" class="tab-content">
+                <div class="page-header"><h1>Learning Module</h1><p>Step-by-step lessons to master Incoterms and Marine Insurance</p></div>
+                <div class="lessons-container" id="lessonsContainer"></div>
+            </section>
+
+            <!-- Quiz -->
+            <section id="quiz" class="tab-content">
+                <div class="page-header"><h1>Quiz Challenge</h1><p>Test your knowledge and earn points!</p></div>
+                <div class="quiz-container">
+                    <!-- Quiz Entry Gate -->
+                    <div class="quiz-entry" id="quizEntry">
+                        <div class="quiz-entry-card">
+                            <div class="quiz-entry-icon">🎯</div>
+                            <h2>Ready to test your knowledge?</h2>
+                            <p>Enter your name to begin the quiz challenge. Answer 10 questions, earn 10 points per correct answer.</p>
+                            <div class="quiz-entry-form">
+                                <label>Your Name</label>
+                                <input type="text" id="quizUserName" placeholder="Enter your name to start" autocomplete="name">
+                                <button class="btn-start-quiz" id="btnStartQuiz">Start Quiz →</button>
+                            </div>
+                            <div class="quiz-entry-rules">
+                                <span>📋 10 Questions</span>
+                                <span>⏱️ No time limit</span>
+                                <span>⭐ 100 max points</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quiz Content (hidden until name entered) -->
+                    <div class="quiz-active" id="quizActive" style="display:none;">
+                        <div class="quiz-header"><div class="quiz-score"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><span id="scoreDisplay">Score: 0</span></div><div class="quiz-progress"><span id="questionCounter">Question 1/10</span><div class="quiz-progress-bar"><div class="quiz-progress-fill" id="quizProgressFill"></div></div></div><button class="btn-restart" id="restartQuiz">Restart</button></div>
+                        <div class="quiz-body" id="quizBody"><div class="question-card" id="questionCard"><h3 id="questionText"></h3><div class="options-grid" id="optionsGrid"></div></div><div class="quiz-feedback" id="quizFeedback"></div><button class="btn-next" id="nextQuestion">Next Question →</button></div>
+                        <div class="quiz-results" id="quizResults" style="display:none;"><div class="results-card"><div class="results-icon">🏆</div><h2>Quiz Complete!</h2><p class="results-score" id="finalScore"></p><p class="results-player" id="resultsPlayer"></p><div class="results-breakdown" id="resultsBreakdown"></div><button class="btn-restart" id="retakeQuiz">Take Again</button></div></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Leaderboard -->
+            <section id="leaderboard" class="tab-content">
+                <div class="page-header"><h1>Leaderboard</h1><p>Top performers across all users</p></div>
+                <div id="leaderboardContent"></div>
+            </section>
+        </main>
+
+        <!-- Footer -->
+        <footer class="app-footer">
+            <span class="footer-left">ICICI Lombard General Insurance Company Ltd.</span>
+            <span class="footer-center">For Internal Use Only</span>
+            <span class="footer-right">Designed by Deepak Arora</span>
+        </footer>
+    </div>
+    <script src="data.js?v=8"></script>
+    <script src="data-lob.js?v=8"></script>
+    <script src="app.js?v=8"></script>
+</body>
+</html>
