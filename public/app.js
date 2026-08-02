@@ -955,13 +955,33 @@ function getChatbotResponse(query) {
         if (mp) return '<strong>' + mp.code + ' — ' + mp.name + '</strong><br><br>' + mp.description + '<br><br><em>(' + lobConfig[lobs[i]].icon + ' ' + lobConfig[lobs[i]].name + ')</em>';
     }
 
-    // Keyword search
-    var words = q.split(/\s+/).filter(function(w) { return w.length > 3; });
+    // Keyword search — prioritize phrase match, then all-words, then any-word
+    var stopWords = ['what','is','the','a','an','for','of','in','to','and','or','cover','coverage','clause','about','tell','me','explain','does','do','which','how','why','take','get','need','insurance','policy','add-on','addon','under'];
+    var words = q.split(/\s+/).filter(function(w) { return w.length > 2 && stopWords.indexOf(w) === -1; });
     if (words.length > 0) {
-        var found = allAddons.filter(function(a) { var s = (a.name + ' ' + a.code + ' ' + a.description + ' ' + (a.whoShouldTake || '')).toLowerCase(); return words.some(function(k) { return s.includes(k); }); });
-        if (found.length > 0) {
-            var t3 = found.slice(0, 3);
-            return 'Found <strong>' + found.length + ' related add-on(s)</strong>:<br><br>' + t3.map(function(a) { return '• <a href="#" onclick="chatAddonClick(\'' + a.code + '\');return false;" style="color:var(--accent-primary);text-decoration:underline;font-weight:700;cursor:pointer;">' + a.code + '</a> (' + a.lobIcon + ') — ' + a.name; }).join('<br>') + (found.length > 3 ? '<br><br>...and ' + (found.length - 3) + ' more.' : '');
+        var phraseQ = words.join(' ');
+        // Priority 1: Full phrase match in name or code
+        var phraseMatch = allAddons.filter(function(a) { var s = (a.name + ' ' + a.code).toLowerCase(); return s.includes(phraseQ); });
+        if (phraseMatch.length > 0) {
+            var t3 = phraseMatch.slice(0, 3);
+            return 'Found <strong>' + phraseMatch.length + ' related add-on(s)</strong>:<br><br>' + t3.map(function(a) { return '• <a href="#" onclick="chatAddonClick(\'' + a.code + '\');return false;" style="color:var(--accent-primary);text-decoration:underline;font-weight:700;cursor:pointer;">' + a.code + '</a> (' + a.lobIcon + ') — ' + a.name; }).join('<br>') + (phraseMatch.length > 3 ? '<br><br>...and ' + (phraseMatch.length - 3) + ' more.' : '');
+        }
+        // Priority 2: All significant words must match
+        var allWordsMatch = allAddons.filter(function(a) { var s = (a.name + ' ' + a.code + ' ' + a.description + ' ' + (a.whoShouldTake || '')).toLowerCase(); return words.every(function(k) { return s.includes(k); }); });
+        if (allWordsMatch.length > 0) {
+            var t3 = allWordsMatch.slice(0, 5);
+            return 'Found <strong>' + allWordsMatch.length + ' related add-on(s)</strong>:<br><br>' + t3.map(function(a) { return '• <a href="#" onclick="chatAddonClick(\'' + a.code + '\');return false;" style="color:var(--accent-primary);text-decoration:underline;font-weight:700;cursor:pointer;">' + a.code + '</a> (' + a.lobIcon + ') — ' + a.name; }).join('<br>') + (allWordsMatch.length > 5 ? '<br><br>...and ' + (allWordsMatch.length - 5) + ' more.' : '');
+        }
+        // Priority 3: Any significant word matches (fallback) — but require at least 4 char words
+        var sigWords = words.filter(function(w) { return w.length > 3; });
+        if (sigWords.length > 0) {
+            var found = allAddons.filter(function(a) { var s = (a.name + ' ' + a.code + ' ' + a.description + ' ' + (a.whoShouldTake || '')).toLowerCase(); return sigWords.some(function(k) { return s.includes(k); }); });
+            if (found.length > 0 && found.length <= 10) {
+                var t3 = found.slice(0, 5);
+                return 'Found <strong>' + found.length + ' related add-on(s)</strong>:<br><br>' + t3.map(function(a) { return '• <a href="#" onclick="chatAddonClick(\'' + a.code + '\');return false;" style="color:var(--accent-primary);text-decoration:underline;font-weight:700;cursor:pointer;">' + a.code + '</a> (' + a.lobIcon + ') — ' + a.name; }).join('<br>') + (found.length > 5 ? '<br><br>...and ' + (found.length - 5) + ' more. Try being more specific.' : '');
+            } else if (found.length > 10) {
+                return 'Found ' + found.length + ' results — too many matches. Try a more specific query like the addon name or code. Examples: "valet parking", "spontaneous combustion", "ESCALATION"';
+            }
         }
     }
 
