@@ -3,7 +3,7 @@
 
 // ===== USER SESSION =====
 let currentUser = null;
-let currentLOB = 'marine';
+let currentLOB = 'fire';
 
 async function loadUser() {
     const session = JSON.parse(localStorage.getItem('ilSession') || 'null');
