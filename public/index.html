@@ -148,6 +148,22 @@
             </section>
         </main>
 
+        <!-- Chatbot -->
+        <div id="chatbot" class="chatbot-container" style="display:none;">
+            <div class="chatbot-header">
+                <span>🤖 Insurance Assistant</span>
+                <button onclick="toggleChatbot()" style="background:none;border:none;color:white;font-size:18px;cursor:pointer;">✕</button>
+            </div>
+            <div class="chatbot-messages" id="chatMessages">
+                <div class="chat-msg bot"><p>Hi! I'm your Insurance Training Assistant. Ask me about:</p><p>• Any add-on cover (e.g., "What is earthquake cover?")</p><p>• Product recommendations (e.g., "Which add-ons for SFSP?")</p><p>• Claim impact (e.g., "What if I don't take debris removal?")</p><p>• Product info (e.g., "Tell me about IAR policy")</p></div>
+            </div>
+            <div class="chatbot-input">
+                <input type="text" id="chatInput" placeholder="Ask about any insurance cover..." autocomplete="off">
+                <button onclick="sendChatMessage()" id="chatSendBtn">Send</button>
+            </div>
+        </div>
+        <button class="chatbot-toggle" id="chatToggleBtn" onclick="toggleChatbot()">🤖</button>
+
         <!-- Footer -->
         <footer class="app-footer">
             <span class="footer-left">ICICI Lombard General Insurance Company Ltd.</span>

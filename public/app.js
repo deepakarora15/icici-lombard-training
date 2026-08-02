@@ -846,6 +846,101 @@ document.querySelectorAll('.audit-tab').forEach(tab => {
     });
 });
 
+// ===== CHATBOT =====
+function toggleChatbot() {
+    const chat = document.getElementById('chatbot');
+    const btn = document.getElementById('chatToggleBtn');
+    if (chat.style.display === 'none') {
+        chat.style.display = 'flex';
+        btn.style.display = 'none';
+        document.getElementById('chatInput').focus();
+    } else {
+        chat.style.display = 'none';
+        btn.style.display = 'block';
+    }
+}
+
+function sendChatMessage() {
+    const input = document.getElementById('chatInput');
+    const msg = input.value.trim();
+    if (!msg) return;
+    input.value = '';
+    appendChatMessage(msg, 'user');
+    setTimeout(() => { appendChatMessage(getChatbotResponse(msg), 'bot'); }, 300);
+}
+
+document.getElementById('chatInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') sendChatMessage(); });
+
+function appendChatMessage(text, type) {
+    const container = document.getElementById('chatMessages');
+    const div = document.createElement('div');
+    div.className = 'chat-msg ' + type;
+    div.innerHTML = '<p>' + text + '</p>';
+    container.appendChild(div);
+    container.scrollTop = container.scrollHeight;
+}
+
+function getChatbotResponse(query) {
+    const q = query.toLowerCase();
+    const allAddons = getAllAddons();
+
+    // Check if asking about a specific addon
+    const matchedAddon = allAddons.find(a => q.includes(a.code.toLowerCase()) || a.name.toLowerCase().split('(')[0].trim().split('/')[0].trim().length > 4 && q.includes(a.name.toLowerCase().split('(')[0].trim().split('/')[0].trim().substring(0,15)));
+    if (matchedAddon) {
+        let r = '<strong>' + matchedAddon.code + ' — ' + matchedAddon.name + '</strong><br>' + matchedAddon.description;
+        if (matchedAddon.whoShouldTake) r += '<br><br><strong>Who should take it:</strong> ' + matchedAddon.whoShouldTake;
+        if (matchedAddon.claimImpact) r += '<br><br><strong>⚠️ If not opted:</strong> ' + matchedAddon.claimImpact;
+        r += '<br><br><em>(' + matchedAddon.lobIcon + ' ' + matchedAddon.lobName + ')</em>';
+        return r;
+    }
+
+    // Check "which addons for [product]"
+    var prodMatch = q.match(/(?:addon|add-on|cover|extension)s?\s*(?:for|of|in|under)\s+(\w+)/i);
+    if (!prodMatch) prodMatch = q.match(/(\w{2,6})\s*(?:addon|add-on|cover|extension)/i);
+    if (prodMatch) {
+        var pc = prodMatch[1].toUpperCase();
+        var relevant = allAddons.filter(function(a) { return !a.relevantProducts || a.relevantProducts.length === 0 || a.relevantProducts.includes(pc); });
+        if (relevant.length > 0) {
+            var top5 = relevant.slice(0, 5);
+            return 'Found <strong>' + relevant.length + ' add-ons</strong> for <strong>' + pc + '</strong>:<br><br>' + top5.map(function(a) { return '• <strong>' + a.code + '</strong> — ' + a.name; }).join('<br>') + (relevant.length > 5 ? '<br><br>...and ' + (relevant.length - 5) + ' more. Use Learning Module → Product Slicer to see all.' : '');
+        }
+    }
+
+    // Check "what if" / "without" / "impact"
+    if (q.includes('what if') || q.includes('without') || q.includes('impact') || q.includes('not take')) {
+        var kws = q.replace(/what if|without|impact|not take|don't take|i|the|do/gi, '').trim().split(/\s+/);
+        var matches = allAddons.filter(function(a) { var s = (a.name + ' ' + a.code + ' ' + a.description).toLowerCase(); return kws.some(function(k) { return k.length > 3 && s.includes(k); }); });
+        if (matches.length > 0) return '<strong>⚠️ ' + matches[0].code + ' — ' + matches[0].name + '</strong><br><br>' + (matches[0].claimImpact || 'Claim impact info not available.');
+    }
+
+    // Check for product info
+    var lobs = ['fire', 'engineering', 'liability'];
+    for (var i = 0; i < lobs.length; i++) {
+        var ld = lobPolicies[lobs[i]];
+        if (!ld) continue;
+        var mp = ld.policies.find(function(p) { return q.includes(p.code.toLowerCase()) || (p.name.length > 10 && q.includes(p.name.toLowerCase().substring(0, 12))); });
+        if (mp) return '<strong>' + mp.code + ' — ' + mp.name + '</strong><br><br>' + mp.description + '<br><br><em>(' + lobConfig[lobs[i]].icon + ' ' + lobConfig[lobs[i]].name + ')</em>';
+    }
+
+    // Keyword search
+    var words = q.split(/\s+/).filter(function(w) { return w.length > 3; });
+    if (words.length > 0) {
+        var found = allAddons.filter(function(a) { var s = (a.name + ' ' + a.code + ' ' + a.description + ' ' + (a.whoShouldTake || '')).toLowerCase(); return words.some(function(k) { return s.includes(k); }); });
+        if (found.length > 0) {
+            var t3 = found.slice(0, 3);
+            return 'Found <strong>' + found.length + ' related add-on(s)</strong>:<br><br>' + t3.map(function(a) { return '• <strong>' + a.code + '</strong> (' + a.lobIcon + ') — ' + a.name; }).join('<br>') + (found.length > 3 ? '<br><br>...and ' + (found.length - 3) + ' more.' : '');
+        }
+    }
+
+    // Default
+    var defs = [
+        'Try asking about a specific add-on by name or code. Example: "What is spontaneous combustion?" or "Tell me about SFSP"',
+        'I can help with: add-on covers, product info, claim impact. Try: "Which add-ons for CAR?" or "What if I don\'t take earthquake cover?"',
+        'I search across 130+ insurance add-ons. Try keywords like: "earthquake", "terrorism", "debris", "customs duty", "sprinkler"'
+    ];
+    return defs[Math.floor(Math.random() * defs.length)];
+}
+
 // ===== INIT =====
 loadUser();
 initAuditLogs();
