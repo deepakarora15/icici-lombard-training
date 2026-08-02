@@ -435,7 +435,7 @@ lobTabs.forEach(tab => {
 
         const config = lobConfig[currentLOB];
         document.getElementById('lobSubtitle').textContent = config.subtitle;
-        document.title = `Deepak Corp Ins Module — ${config.name} Training`;
+        document.title = `Corporate Insurance Training Module — ${config.name} Training`;
 
         // Show/hide marine-specific nav items
         const allNavItems = document.querySelectorAll('.nav-links li');
@@ -474,7 +474,7 @@ function getLOBData() {
 function renderLOBDashboard() {
     const config = lobConfig[currentLOB];
     const header = document.querySelector('#dashboard .page-header');
-    header.innerHTML = `<h1>${config.icon} ${config.name} Dashboard</h1><p>Deepak Corp Ins Module — ${config.description}</p>`;
+    header.innerHTML = `<h1>${config.icon} ${config.name} Dashboard</h1><p>Corporate Insurance Training Module — ${config.description}</p>`;
 
     if (currentLOB === 'marine') {
         // Hide LOB content if it exists
@@ -985,3 +985,9 @@ renderRiskFlow();
 renderStoryChips();
 renderStory('EXW');
 renderLessons();
+
+// Trigger the active LOB tab (fire) on page load so Fire content renders by default
+(function() {
+    const activeTab = document.querySelector('.lob-tab.active');
+    if (activeTab) activeTab.click();
+})();
