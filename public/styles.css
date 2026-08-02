@@ -693,33 +693,45 @@ body {
 .lob-tabs {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 6px;
+    gap: 10px;
     margin-top: 14px;
 }
 .lob-tab {
-    padding: 10px 8px;
-    border-radius: 8px;
-    border: 1.5px solid var(--border);
-    background: var(--bg-secondary);
-    color: var(--text-secondary);
-    font-size: 13px;
-    font-weight: 600;
+    padding: 18px 12px;
+    border-radius: 12px;
+    border: 2px solid var(--border);
+    background: white;
+    color: var(--text-primary);
+    font-size: 15px;
+    font-weight: 700;
     font-family: inherit;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: all 0.25s ease;
     text-align: center;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.04);
 }
+.lob-tab[data-lob="marine"] { border-left: 4px solid #1a73a7; background: linear-gradient(135deg, #f0f7fc 0%, #ffffff 100%); }
+.lob-tab[data-lob="fire"] { border-left: 4px solid #c53030; background: linear-gradient(135deg, #fef5f5 0%, #ffffff 100%); }
+.lob-tab[data-lob="liability"] { border-left: 4px solid #2b6cb0; background: linear-gradient(135deg, #ebf4ff 0%, #ffffff 100%); }
+.lob-tab[data-lob="engineering"] { border-left: 4px solid #6b46c1; background: linear-gradient(135deg, #f3f0ff 0%, #ffffff 100%); }
 .lob-tab:hover {
-    border-color: var(--accent-primary);
-    color: var(--accent-primary);
-    background: #edf2f7;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
+.lob-tab[data-lob="marine"]:hover { border-color: #1a73a7; color: #1a73a7; }
+.lob-tab[data-lob="fire"]:hover { border-color: #c53030; color: #c53030; }
+.lob-tab[data-lob="liability"]:hover { border-color: #2b6cb0; color: #2b6cb0; }
+.lob-tab[data-lob="engineering"]:hover { border-color: #6b46c1; color: #6b46c1; }
 .lob-tab.active {
-    background: var(--accent-primary);
     color: white;
-    border-color: var(--accent-primary);
-    box-shadow: 0 2px 8px rgba(45,55,72,0.25);
+    border-color: transparent;
+    box-shadow: 0 4px 14px rgba(45,55,72,0.3);
+    transform: translateY(-1px);
 }
+.lob-tab[data-lob="marine"].active { background: linear-gradient(135deg, #1a73a7 0%, #2b8fc7 100%); }
+.lob-tab[data-lob="fire"].active { background: linear-gradient(135deg, #c53030 0%, #e53e3e 100%); }
+.lob-tab[data-lob="liability"].active { background: linear-gradient(135deg, #2b6cb0 0%, #3182ce 100%); }
+.lob-tab[data-lob="engineering"].active { background: linear-gradient(135deg, #6b46c1 0%, #805ad5 100%); }
 
 /* LOB Policy Cards */
 .lob-description {
