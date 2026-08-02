@@ -36,6 +36,80 @@ app.get('/dashboard/*', (req, res) => res.sendFile(path.join(__dirname, 'public'
 app.get('/', (req, res) => res.redirect('/login'));
 app.get('/health', (req, res) => res.json({ status: 'ok' }));
 
+// ===== API: Hide an addon (admin only) =====
+app.post('/api/addons/hide', requireAdmin, (req, res) => {
+    const { lob, code } = req.body;
+    if (!lob || !code) return res.status(400).json({ error: 'lob and code are required' });
+    const db = readDB();
+    if (!db.hiddenAddons) db.hiddenAddons = [];
+    const key = `${lob}::${code}`;
+    if (!db.hiddenAddons.includes(key)) {
+        db.hiddenAddons.push(key);
+        writeDB(db);
+    }
+    res.json({ success: true });
+});
+
+// ===== API: Unhide an addon (admin only) =====
+app.post('/api/addons/unhide', requireAdmin, (req, res) => {
+    const { lob, code } = req.body;
+    if (!lob || !code) return res.status(400).json({ error: 'lob and code are required' });
+    const db = readDB();
+    if (!db.hiddenAddons) db.hiddenAddons = [];
+    const key = `${lob}::${code}`;
+    db.hiddenAddons = db.hiddenAddons.filter(k => k !== key);
+    writeDB(db);
+    res.json({ success: true });
+});
+
+// ===== API: Get hidden addons list =====
+app.get('/api/addons/hidden', (req, res) => {
+    const db = readDB();
+    res.json(db.hiddenAddons || []);
+});
+
+// ===== API: Bulk add addons (admin only) =====
+app.post('/api/addons/bulk', requireAdmin, (req, res) => {
+    const addons = req.body.addons;
+    if (!Array.isArray(addons) || addons.length === 0) {
+        return res.status(400).json({ error: 'addons array is required' });
+    }
+    const db = readDB();
+    if (!db.customAddons) db.customAddons = {};
+    let successCount = 0;
+    const errors = [];
+    addons.forEach((addon, idx) => {
+        if (!addon.lob || !addon.code || !addon.name) {
+            errors.push(`Row ${idx + 1}: lob, code, and name are required`);
+            return;
+        }
+        const lob = addon.lob.toLowerCase().trim();
+        if (!db.customAddons[lob]) db.customAddons[lob] = [];
+        // Remove existing with same code to avoid duplicates
+        db.customAddons[lob] = db.customAddons[lob].filter(a => a.code !== addon.code);
+        db.customAddons[lob].push({
+            code: addon.code.trim(),
+            name: addon.name.trim(),
+            irdaRef: addon.irdaRef || '',
+            description: addon.description || '',
+            whoShouldTake: addon.whoShouldTake || '',
+            whyItsNeeded: addon.whyItsNeeded || '',
+            claimImpact: addon.claimImpact || '',
+            relevantProducts: Array.isArray(addon.relevantProducts) ? addon.relevantProducts : (addon.relevantProducts || '').split(',').map(s => s.trim()).filter(Boolean),
+            addedAt: new Date().toISOString()
+        });
+        successCount++;
+    });
+    writeDB(db);
+    res.json({ success: true, successCount, errors });
+});
+
+// ===== API: Get custom addons (grouped by lob) =====
+app.get('/api/addons/custom', (req, res) => {
+    const db = readDB();
+    res.json(db.customAddons || {});
+});
+
 // ===== API: Update an addon (admin only) =====
 app.put('/api/addons/:lob/:code', requireAdmin, (req, res) => {
     const { lob, code } = req.params;

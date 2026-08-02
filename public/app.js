@@ -4,6 +4,8 @@
 // ===== USER SESSION =====
 let currentUser = null;
 let currentLOB = 'fire';
+let hiddenAddonKeys = [];
+let customAddonsLoaded = false;
 
 async function loadUser() {
     const session = JSON.parse(localStorage.getItem('ilSession') || 'null');
@@ -540,6 +542,10 @@ function renderLOBLessons() {
     header.innerHTML = `<h1>${config.icon} ${config.name} — Add-on Covers & Extensions</h1><p>Click any add-on to learn: what it covers, who needs it, and what happens if you don't opt for it</p>`;
 
     const container = document.getElementById('lessonsContainer');
+    const isAdmin = currentUser && currentUser.role === 'admin';
+
+    // Admin bulk upload button
+    const adminBulkBtn = isAdmin ? `<div style="margin-bottom:16px;"><button onclick="showBulkUploadModal()" style="padding:10px 18px;background:#28a745;color:white;border:none;border-radius:8px;cursor:pointer;font-size:14px;font-weight:600;">➕ Add Add-ons</button></div>` : '';
 
     // Product slicer buttons
     const productCodes = lobData.policies.map(p => p.code);
@@ -554,19 +560,35 @@ function renderLOBLessons() {
         <input type="text" id="lobAddonSearch" placeholder="🔍 Search within ${config.name} add-ons..." style="width:100%;max-width:500px;padding:12px 16px;border:2px solid var(--border);border-radius:10px;font-size:15px;font-family:inherit;transition:border-color 0.2s;" onfocus="this.style.borderColor='var(--accent-primary)'" onblur="this.style.borderColor='var(--border)'">
     </div>`;
 
+    // Filter hidden addons for non-admin users
     var sortedAddons = lobData.addons.slice().sort(function(a,b) { return a.name.localeCompare(b.name); });
-    const isAdmin = currentUser && currentUser.role === 'admin';
-    container.innerHTML = slicerHtml + searchHtml + sortedAddons.map((addon, idx) => `
-        <div class="lesson-card" data-lesson="${idx}" data-addon-code="${addon.code}" data-products="${(addon.relevantProducts || []).join(',')}" data-search="${(addon.code + ' ' + addon.name + ' ' + addon.description + ' ' + (addon.whoShouldTake||'')).toLowerCase()}">
+    if (!isAdmin) {
+        sortedAddons = sortedAddons.filter(function(addon) {
+            const key = currentLOB + '::' + addon.code;
+            return !hiddenAddonKeys.includes(key);
+        });
+    }
+
+    container.innerHTML = adminBulkBtn + slicerHtml + searchHtml + sortedAddons.map((addon, idx) => {
+        const key = currentLOB + '::' + addon.code;
+        const isHidden = hiddenAddonKeys.includes(key);
+        const hiddenStyle = isAdmin && isHidden ? 'opacity:0.4;' : '';
+        const hiddenBadge = isAdmin && isHidden ? '<span style="background:#dc3545;color:white;font-size:10px;padding:2px 6px;border-radius:4px;margin-left:8px;font-weight:700;">[HIDDEN]</span>' : '';
+        const hideBtn = isAdmin ? (isHidden ?
+            `<button class="addon-edit-btn" onclick="event.stopPropagation();unhideAddon('${currentLOB}','${addon.code}')" title="Unhide" style="font-size:14px;">👁️ Show</button>` :
+            `<button class="addon-edit-btn" onclick="event.stopPropagation();hideAddon('${currentLOB}','${addon.code}')" title="Hide" style="font-size:14px;">👁️ Hide</button>`) : '';
+
+        return `
+        <div class="lesson-card" data-lesson="${idx}" data-addon-code="${addon.code}" data-products="${(addon.relevantProducts || []).join(',')}" data-search="${(addon.code + ' ' + addon.name + ' ' + addon.description + ' ' + (addon.whoShouldTake||'')).toLowerCase()}" style="${hiddenStyle}">
             <div class="lesson-header">
                 <div class="lesson-icon">📋</div>
                 <div class="lesson-title-wrap">
-                    <h3>${addon.name} — ${addon.code}</h3>
+                    <h3>${addon.name} — ${addon.code}${hiddenBadge}</h3>
                     <p>${addon.irdaRef ? 'IRDA Ref #' + addon.irdaRef + ' | ' : ''}${addon.relevantProducts && addon.relevantProducts.length ? '<span style="color:var(--accent-teal);font-weight:600;">Applies to: ' + addon.relevantProducts.join(', ') + '</span>' : 'Applies to: All Products'}</p>
                 </div>
                 <div class="addon-header-actions">
                     <button class="addon-flag-btn" onclick="event.stopPropagation();flagAddon('${currentLOB}','${addon.code}')" title="Flag as Incorrect">⚠️</button>
-                    ${isAdmin ? `<button class="addon-edit-btn" onclick="event.stopPropagation();editAddon('${currentLOB}','${addon.code}')" title="Edit">✏️</button><button class="addon-delete-btn" onclick="event.stopPropagation();deleteAddon('${currentLOB}','${addon.code}')" title="Delete">🗑️</button>` : ''}
+                    ${isAdmin ? `${hideBtn}<button class="addon-edit-btn" onclick="event.stopPropagation();editAddon('${currentLOB}','${addon.code}')" title="Edit">✏️</button><button class="addon-delete-btn" onclick="event.stopPropagation();deleteAddon('${currentLOB}','${addon.code}')" title="Delete">🗑️</button>` : ''}
                 </div>
                 <div class="lesson-toggle">▼</div>
             </div>
@@ -578,7 +600,7 @@ function renderLOBLessons() {
                 ${addon.claimImpact ? `<div class="lesson-highlight"><h4>⚠️ Claim Impact If NOT Opted</h4><p>${addon.claimImpact}</p></div>` : ''}
             </div>
         </div>
-    `).join('');
+    `}).join('');
 
     // LOB-specific search filtering
     const searchInput = document.getElementById('lobAddonSearch');
@@ -912,6 +934,7 @@ function getChatbotResponse(query) {
     if (matchedAddon) {
         let r = '<strong>' + matchedAddon.name + ' — ' + matchedAddon.code + '</strong><br>' + matchedAddon.description;
         if (matchedAddon.whoShouldTake) r += '<br><br><strong>Who should take it:</strong> ' + matchedAddon.whoShouldTake;
+        if (matchedAddon.whyItsNeeded) r += '<br><br><strong>Why it\'s needed:</strong> ' + matchedAddon.whyItsNeeded;
         if (matchedAddon.claimImpact) r += '<br><br><strong>⚠️ If not opted:</strong> ' + matchedAddon.claimImpact;
         r += '<br><br><em>(' + matchedAddon.lobIcon + ' ' + matchedAddon.lobName + ')</em>';
         return r;
@@ -1073,6 +1096,219 @@ function deleteAddon(lob, code) {
     renderLOBLessons();
 }
 
+// ===== ADMIN: HIDE ADDON =====
+function hideAddon(lob, code) {
+    fetch('/api/addons/hide', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-user-role': currentUser.role },
+        body: JSON.stringify({ lob, code })
+    }).then(res => res.json()).then(data => {
+        if (data.success) {
+            const key = `${lob}::${code}`;
+            if (!hiddenAddonKeys.includes(key)) hiddenAddonKeys.push(key);
+            renderLOBLessons();
+        }
+    }).catch(err => console.error('Failed to hide addon:', err));
+}
+
+// ===== ADMIN: UNHIDE ADDON =====
+function unhideAddon(lob, code) {
+    fetch('/api/addons/unhide', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-user-role': currentUser.role },
+        body: JSON.stringify({ lob, code })
+    }).then(res => res.json()).then(data => {
+        if (data.success) {
+            const key = `${lob}::${code}`;
+            hiddenAddonKeys = hiddenAddonKeys.filter(k => k !== key);
+            renderLOBLessons();
+        }
+    }).catch(err => console.error('Failed to unhide addon:', err));
+}
+
+// ===== ADMIN: BULK CSV UPLOAD =====
+function downloadTemplate() {
+    const headers = 'lob,code,name,irdaRef,description,whoShouldTake,whyItsNeeded,claimImpact,relevantProducts';
+    const sampleRow = 'fire,SAMPLE-001,Sample Add-on Cover,REF-123,"Covers damage from sample perils","Property owners with high-value assets","Essential for comprehensive coverage","Without this cover claim will be rejected for sample perils","SFSP, IAR"';
+    const csv = headers + '\n' + sampleRow + '\n';
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'addon_upload_template.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+}
+
+function showBulkUploadModal() {
+    const existing = document.getElementById('bulkUploadModal');
+    if (existing) existing.remove();
+
+    const modal = document.createElement('div');
+    modal.id = 'bulkUploadModal';
+    modal.className = 'addon-modal-overlay';
+    modal.innerHTML = `
+        <div class="addon-modal">
+            <div class="addon-modal-header">
+                <h3>➕ Bulk Add Add-ons via CSV</h3>
+                <button class="addon-modal-close" onclick="document.getElementById('bulkUploadModal').remove()">✕</button>
+            </div>
+            <div class="addon-modal-form" style="padding:20px;">
+                <p style="margin-bottom:16px;color:var(--text-secondary);font-size:14px;">Upload a CSV file to add multiple add-ons at once. Download the template first to see the required format.</p>
+                <div style="display:flex;gap:12px;margin-bottom:20px;">
+                    <button onclick="downloadTemplate()" style="padding:10px 18px;background:var(--accent-primary);color:white;border:none;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;">📥 Download Template</button>
+                </div>
+                <div style="margin-bottom:16px;">
+                    <label style="font-size:12px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;display:block;margin-bottom:8px;">📤 Upload CSV File</label>
+                    <input type="file" id="csvFileInput" accept=".csv" style="padding:10px;border:2px dashed var(--border);border-radius:8px;width:100%;cursor:pointer;">
+                </div>
+                <div id="bulkUploadStatus" style="margin-top:12px;font-size:13px;"></div>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+
+    document.getElementById('csvFileInput').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) uploadAddons(file);
+    });
+}
+
+function uploadAddons(file) {
+    const statusEl = document.getElementById('bulkUploadStatus');
+    statusEl.innerHTML = '<span style="color:var(--accent-primary);">Processing...</span>';
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const text = e.target.result;
+        const lines = text.split(/\r?\n/).filter(line => line.trim());
+        if (lines.length < 2) {
+            statusEl.innerHTML = '<span style="color:#dc3545;">Error: CSV must have a header row and at least one data row.</span>';
+            return;
+        }
+
+        const headers = parseCSVRow(lines[0]);
+        const addons = [];
+        const errors = [];
+
+        for (let i = 1; i < lines.length; i++) {
+            const values = parseCSVRow(lines[i]);
+            if (values.length < 3) {
+                errors.push(`Row ${i}: insufficient columns`);
+                continue;
+            }
+            const obj = {};
+            headers.forEach((h, idx) => { obj[h.trim()] = values[idx] ? values[idx].trim() : ''; });
+
+            if (!obj.lob || !obj.code || !obj.name) {
+                errors.push(`Row ${i}: lob, code, and name are required`);
+                continue;
+            }
+            // Parse relevantProducts as array
+            if (obj.relevantProducts) {
+                obj.relevantProducts = obj.relevantProducts.split(',').map(s => s.trim()).filter(Boolean);
+            } else {
+                obj.relevantProducts = [];
+            }
+            addons.push(obj);
+        }
+
+        if (addons.length === 0) {
+            statusEl.innerHTML = '<span style="color:#dc3545;">No valid rows found. ' + (errors.length ? errors.join('; ') : '') + '</span>';
+            return;
+        }
+
+        // Send to server
+        fetch('/api/addons/bulk', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'x-user-role': currentUser.role },
+            body: JSON.stringify({ addons })
+        }).then(res => res.json()).then(data => {
+            if (data.success) {
+                let msg = `<span style="color:#28a745;">✓ Successfully added ${data.successCount} add-on(s).</span>`;
+                if (data.errors && data.errors.length > 0) {
+                    msg += `<br><span style="color:#dc3545;">${data.errors.join('<br>')}</span>`;
+                }
+                if (errors.length > 0) {
+                    msg += `<br><span style="color:#dc3545;">Client errors: ${errors.join('; ')}</span>`;
+                }
+                statusEl.innerHTML = msg;
+                // Reload custom addons into memory
+                loadCustomAddons().then(() => renderLOBLessons());
+            } else {
+                statusEl.innerHTML = `<span style="color:#dc3545;">Server error: ${data.error || 'Unknown error'}</span>`;
+            }
+        }).catch(err => {
+            statusEl.innerHTML = `<span style="color:#dc3545;">Upload failed: ${err.message}</span>`;
+        });
+    };
+    reader.readAsText(file);
+}
+
+function parseCSVRow(row) {
+    const result = [];
+    let current = '';
+    let inQuotes = false;
+    for (let i = 0; i < row.length; i++) {
+        const ch = row[i];
+        if (ch === '"') {
+            if (inQuotes && row[i + 1] === '"') {
+                current += '"';
+                i++;
+            } else {
+                inQuotes = !inQuotes;
+            }
+        } else if (ch === ',' && !inQuotes) {
+            result.push(current);
+            current = '';
+        } else {
+            current += ch;
+        }
+    }
+    result.push(current);
+    return result;
+}
+
+// ===== LOAD HIDDEN ADDONS =====
+async function loadHiddenAddons() {
+    try {
+        const res = await fetch('/api/addons/hidden');
+        if (res.ok) {
+            hiddenAddonKeys = await res.json();
+        }
+    } catch (err) {
+        console.error('Failed to load hidden addons:', err);
+    }
+}
+
+// ===== LOAD CUSTOM ADDONS =====
+async function loadCustomAddons() {
+    try {
+        const res = await fetch('/api/addons/custom');
+        if (res.ok) {
+            const customAddons = await res.json();
+            // Merge custom addons into lobPolicies
+            Object.keys(customAddons).forEach(lob => {
+                if (lobPolicies[lob] && lobPolicies[lob].addons) {
+                    const existingCodes = lobPolicies[lob].addons.map(a => a.code);
+                    customAddons[lob].forEach(addon => {
+                        if (!existingCodes.includes(addon.code)) {
+                            lobPolicies[lob].addons.push(addon);
+                        } else {
+                            // Update existing
+                            const idx = lobPolicies[lob].addons.findIndex(a => a.code === addon.code);
+                            if (idx >= 0) lobPolicies[lob].addons[idx] = { ...lobPolicies[lob].addons[idx], ...addon };
+                        }
+                    });
+                }
+            });
+            customAddonsLoaded = true;
+        }
+    } catch (err) {
+        console.error('Failed to load custom addons:', err);
+    }
+}
+
 // ===== FLAG AS INCORRECT =====
 function flagAddon(lob, code) {
     const reason = prompt('Flag this add-on as incorrect.\n\nOptional: provide a reason or note:');
@@ -1155,8 +1391,10 @@ renderStoryChips();
 renderStory('EXW');
 renderLessons();
 
-// Trigger the active LOB tab (fire) on page load so Fire content renders by default
-(function() {
+// Load hidden addons and custom addons, then trigger LOB tab
+(async function() {
+    await loadHiddenAddons();
+    await loadCustomAddons();
     const activeTab = document.querySelector('.lob-tab.active');
     if (activeTab) activeTab.click();
 })();
