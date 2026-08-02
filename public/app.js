@@ -598,6 +598,12 @@ function renderLOBLessons() {
                 ${addon.whoShouldTake ? `<h4>👤 Who Should Take It</h4><p>${addon.whoShouldTake}</p>` : ''}
                 ${addon.whyItsNeeded ? `<h4>❓ Why It's Needed</h4><p>${addon.whyItsNeeded}</p>` : ''}
                 ${addon.claimImpact ? `<div class="lesson-highlight"><h4>⚠️ Claim Impact If NOT Opted</h4><p>${addon.claimImpact}</p></div>` : ''}
+                ${isAdmin ? `<div class="addon-meta" style="margin-top:16px;padding-top:12px;border-top:1px dashed #e2e8f0;font-size:12px;color:#718096;">
+                    <span title="Source">📎 <strong>Source:</strong> ${addon.source || 'Built-in (Policy document analysis)'}</span>
+                    ${addon.addedAt ? ` &nbsp;|&nbsp; 📅 <strong>Added:</strong> ${new Date(addon.addedAt).toLocaleDateString('en-IN')}` : ''}
+                    ${addon.updatedAt ? ` &nbsp;|&nbsp; ✏️ <strong>Last Updated:</strong> ${new Date(addon.updatedAt).toLocaleDateString('en-IN')}` : ''}
+                    ${addon.addedBy ? ` &nbsp;|&nbsp; 👤 <strong>By:</strong> ${addon.addedBy}` : ''}
+                </div>` : ''}
             </div>
         </div>
     `}).join('');
@@ -1035,6 +1041,8 @@ function editAddon(lob, code) {
                 <textarea name="claimImpact" rows="2">${addon.claimImpact || ''}</textarea>
                 <label>Relevant Products (comma-separated)</label>
                 <input type="text" name="relevantProducts" value="${(addon.relevantProducts || []).join(', ')}">
+                <label>Source / Reference Document</label>
+                <input type="text" name="source" id="editAddonSource" value="${addon.source || ''}" placeholder="e.g., Masaya Solar IAR Policy, IRDA Circular, Reliance SFSP Policy...">
                 <div class="addon-modal-actions">
                     <button type="button" class="addon-modal-cancel" onclick="document.getElementById('addonEditModal').remove()">Cancel</button>
                     <button type="submit" class="addon-modal-save">Save Changes</button>
@@ -1053,7 +1061,8 @@ function editAddon(lob, code) {
             whoShouldTake: form.whoShouldTake.value.trim(),
             whyItsNeeded: form.whyItsNeeded.value.trim(),
             claimImpact: form.claimImpact.value.trim(),
-            relevantProducts: form.relevantProducts.value.split(',').map(s => s.trim()).filter(Boolean)
+            relevantProducts: form.relevantProducts.value.split(',').map(s => s.trim()).filter(Boolean),
+            source: form.source.value.trim()
         };
 
         // Update in-memory data
@@ -1128,8 +1137,8 @@ function unhideAddon(lob, code) {
 
 // ===== ADMIN: BULK CSV UPLOAD =====
 function downloadTemplate() {
-    const headers = 'lob,code,name,irdaRef,description,whoShouldTake,whyItsNeeded,claimImpact,relevantProducts';
-    const sampleRow = 'fire,SAMPLE-001,Sample Add-on Cover,REF-123,"Covers damage from sample perils","Property owners with high-value assets","Essential for comprehensive coverage","Without this cover claim will be rejected for sample perils","SFSP, IAR"';
+    const headers = 'lob,code,name,irdaRef,description,whoShouldTake,whyItsNeeded,claimImpact,relevantProducts,source';
+    const sampleRow = 'fire,SAMPLE-001,Sample Add-on Cover,REF-123,"Covers damage from sample perils","Property owners with high-value assets","Essential for comprehensive coverage","Without this cover claim will be rejected for sample perils","SFSP, IAR","Masaya Solar IAR Policy D268122471"';
     const csv = headers + '\n' + sampleRow + '\n';
     const blob = new Blob([csv], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
@@ -1210,6 +1219,8 @@ function uploadAddons(file) {
             } else {
                 obj.relevantProducts = [];
             }
+            // Preserve source field from CSV
+            if (!obj.source) obj.source = '';
             addons.push(obj);
         }
 

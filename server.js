@@ -96,6 +96,8 @@ app.post('/api/addons/bulk', requireAdmin, (req, res) => {
             whyItsNeeded: addon.whyItsNeeded || '',
             claimImpact: addon.claimImpact || '',
             relevantProducts: Array.isArray(addon.relevantProducts) ? addon.relevantProducts : (addon.relevantProducts || '').split(',').map(s => s.trim()).filter(Boolean),
+            source: addon.source || '',
+            addedBy: addon.addedBy || req.headers['x-user-name'] || '',
             addedAt: new Date().toISOString()
         });
         successCount++;
@@ -117,7 +119,8 @@ app.put('/api/addons/:lob/:code', requireAdmin, (req, res) => {
     const db = readDB();
     if (!db.addonOverrides) db.addonOverrides = {};
     const key = `${lob}::${code}`;
-    db.addonOverrides[key] = { ...db.addonOverrides[key], ...updates, lob, code, updatedAt: new Date().toISOString() };
+    const updatedBy = updates.updatedBy || req.headers['x-user-name'] || '';
+    db.addonOverrides[key] = { ...db.addonOverrides[key], ...updates, lob, code, updatedBy, updatedAt: new Date().toISOString() };
     writeDB(db);
     res.json({ success: true, addon: db.addonOverrides[key] });
 });
