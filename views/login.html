@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ICICI Lombard — Insurance Training Portal</title>
+    <title>DA Insurance — Training Portal</title>
     <link href="https://fonts.googleapis.com/css2?family=Mulish:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'Mulish', sans-serif;
-            background: linear-gradient(135deg, #005B75, #003D50);
+            background: linear-gradient(135deg, #2d3748, #1a202c);
             min-height: 100vh;
             display: flex;
             align-items: center;
@@ -25,7 +25,7 @@
         }
         .login-logo { text-align: center; margin-bottom: 24px; }
         .login-logo svg { margin-bottom: 12px; }
-        .login-title { font-size: 22px; font-weight: 700; color: #B02A30; text-align: center; margin-bottom: 4px; }
+        .login-title { font-size: 22px; font-weight: 700; color: #2d3748; text-align: center; margin-bottom: 4px; }
         .login-subtitle { font-size: 14px; color: #5a6370; text-align: center; margin-bottom: 28px; }
         .form-group { margin-bottom: 16px; }
         .form-group label {
@@ -37,14 +37,14 @@
             border: 1px solid #e0e4e8; background: #f8f9fa; color: #1a1a2e;
             font-size: 14px; font-family: inherit; transition: border-color 0.2s;
         }
-        .form-group input:focus { outline: none; border-color: #005B75; background: #fff; }
+        .form-group input:focus { outline: none; border-color: #4a6fa5; background: #fff; }
         .form-group input::placeholder { color: #b0b8c1; }
         .btn-signin {
             width: 100%; padding: 13px; border: none; border-radius: 8px;
-            background: #005B75; color: #fff; font-size: 15px; font-weight: 600;
+            background: #4a6fa5; color: #fff; font-size: 15px; font-weight: 600;
             cursor: pointer; transition: background 0.2s; margin-top: 8px; font-family: inherit;
         }
-        .btn-signin:hover { background: #004a60; }
+        .btn-signin:hover { background: #3b5a8a; }
         .btn-signin:disabled { opacity: 0.6; cursor: not-allowed; }
         .error-msg {
             background: #fdecea; border: 1px solid #f5c6cb;
@@ -63,13 +63,13 @@
         <div class="login-card">
             <div class="login-logo">
                 <svg width="56" height="56" viewBox="0 0 40 40" fill="none">
-                    <rect width="40" height="40" rx="8" fill="#B02A30"/>
-                    <path d="M10 28 Q20 12 30 28" stroke="#F99D27" stroke-width="3" fill="none" stroke-linecap="round"/>
-                    <path d="M10 32 Q20 18 30 32" stroke="#F99D27" stroke-width="2" fill="none" opacity="0.5" stroke-linecap="round"/>
-                    <circle cx="20" cy="14" r="3" fill="#F99D27"/>
+                    <rect width="40" height="40" rx="8" fill="#2d3748"/>
+                    <path d="M10 28 Q20 12 30 28" stroke="#4a6fa5" stroke-width="3" fill="none" stroke-linecap="round"/>
+                    <path d="M10 32 Q20 18 30 32" stroke="#6b8cae" stroke-width="2" fill="none" opacity="0.5" stroke-linecap="round"/>
+                    <circle cx="20" cy="14" r="3" fill="#4a6fa5"/>
                 </svg>
             </div>
-            <div class="login-title">ICICI Lombard</div>
+            <div class="login-title">DA Insurance Training</div>
             <div class="login-subtitle">Insurance Training Portal</div>
 
             <div class="error-msg" id="errorMsg"></div>
@@ -86,7 +86,7 @@
                 <button type="submit" class="btn-signin">Sign In</button>
             </form>
 
-            <p class="disclaimer">Internal & Confidentiality Notice — This portal and its contents are intended solely for internal use by authorized personnel of ICICI Lombard General Insurance Company Ltd. Unauthorized access, distribution, or reproduction is strictly prohibited.</p>
+            <p class="disclaimer">Internal & Confidentiality Notice — This portal and its contents are intended solely for internal use by authorized personnel of DA Insurance. Unauthorized access, distribution, or reproduction is strictly prohibited.</p>
         </div>
     </div>
 
@@ -104,8 +104,8 @@
             var users = JSON.parse(localStorage.getItem('ilManagedUsers') || 'null');
             if (!users) {
                 users = [
-                    { username: 'admin', password: 'Admin@123', role: 'admin', isDefault: true, email: 'admin@icicilombard.com', createdAt: new Date().toISOString() },
-                    { username: 'user', password: 'User@123', role: 'user', isDefault: true, email: 'user@icicilombard.com', createdAt: new Date().toISOString() }
+                    { username: 'admin', password: 'Admin@123', role: 'admin', isDefault: true, email: 'admin@da-insurance.com', createdAt: new Date().toISOString() },
+                    { username: 'user', password: 'User@123', role: 'user', isDefault: true, email: 'user@da-insurance.com', createdAt: new Date().toISOString() }
                 ];
                 localStorage.setItem('ilManagedUsers', JSON.stringify(users));
             }

@@ -450,7 +450,7 @@ lobTabs.forEach(tab => {
 
         const config = lobConfig[currentLOB];
         document.getElementById('lobSubtitle').textContent = config.subtitle;
-        document.title = `ICICI Lombard — ${config.name} Training`;
+        document.title = `DA Training — ${config.name} Training`;
 
         // Show/hide marine-specific nav items
         const allNavItems = document.querySelectorAll('.nav-links li');
@@ -489,7 +489,7 @@ function getLOBData() {
 function renderLOBDashboard() {
     const config = lobConfig[currentLOB];
     const header = document.querySelector('#dashboard .page-header');
-    header.innerHTML = `<h1>${config.icon} ${config.name} Dashboard</h1><p>ICICI Lombard — ${config.description}</p>`;
+    header.innerHTML = `<h1>${config.icon} ${config.name} Dashboard</h1><p>DA Insurance Training — ${config.description}</p>`;
 
     if (currentLOB === 'marine') {
         // Hide LOB content if it exists
@@ -712,7 +712,7 @@ function renderAuditUsers() {
                     <label style="font-size:11px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;display:block;margin-bottom:4px;">Email Prefix</label>
                     <div style="display:flex;align-items:center;gap:0;">
                         <input type="text" id="newEmailPrefix" placeholder="firstname" style="flex:1;padding:10px 12px;border:1px solid var(--border);border-radius:6px 0 0 6px;font-size:13px;background:var(--bg-primary);color:var(--text-primary);">
-                        <span style="padding:10px 8px;background:var(--border);border:1px solid var(--border);border-radius:0 6px 6px 0;font-size:12px;color:var(--text-secondary);">@icicilombard.com</span>
+                        <span style="padding:10px 8px;background:var(--border);border:1px solid var(--border);border-radius:0 6px 6px 0;font-size:12px;color:var(--text-secondary);">@da-insurance.com</span>
                     </div>
                 </div>
                 <div>
@@ -814,7 +814,7 @@ function createUser() {
         return;
     }
 
-    const email = (emailPrefix || username) + '@icicilombard.com';
+    const email = (emailPrefix || username) + '@da-insurance.com';
     users.push({ username, password, role, email, isDefault: false, createdAt: new Date().toISOString() });
     localStorage.setItem('ilManagedUsers', JSON.stringify(users));
 

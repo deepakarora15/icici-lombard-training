@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: icici-lombard-training
+    name: da-insurance-training
     runtime: node
     buildCommand: npm install
     startCommand: node server.js
