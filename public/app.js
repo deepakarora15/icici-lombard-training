@@ -564,12 +564,7 @@ function renderLOBLessons() {
         ${productCodes.map(code => `<button class="slicer-btn" data-product="${code}" onclick="filterAddonsByProduct('${code}')">${code}</button>`).join('')}
     </div>`;
 
-    // Search box
-    const searchHtml = `<div class="lob-search-box" style="margin-bottom:20px;">
-        <input type="text" id="lobAddonSearch" placeholder="🔍 Search within ${config.name} add-ons..." style="width:100%;max-width:500px;padding:12px 16px;border:2px solid var(--border);border-radius:10px;font-size:15px;font-family:inherit;transition:border-color 0.2s;" onfocus="this.style.borderColor='var(--accent-primary)'" onblur="this.style.borderColor='var(--border)'">
-    </div>`;
-
-    container.innerHTML = slicerHtml + searchHtml + lobData.addons.map((addon, idx) => `
+    container.innerHTML = slicerHtml + lobData.addons.map((addon, idx) => `
         <div class="lesson-card" data-lesson="${idx}" data-products="${(addon.relevantProducts || []).join(',')}" data-search="${(addon.code + ' ' + addon.name + ' ' + addon.description + ' ' + (addon.whoShouldTake||'')).toLowerCase()}">
             <div class="lesson-header">
                 <div class="lesson-icon">📋</div>
@@ -590,18 +585,6 @@ function renderLOBLessons() {
     `).join('');
 
     // LOB-specific search filtering
-    const searchInput = document.getElementById('lobAddonSearch');
-    if (searchInput) {
-        searchInput.addEventListener('input', (e) => {
-            const q = e.target.value.toLowerCase().trim();
-            container.querySelectorAll('.lesson-card').forEach(card => {
-                if (!q || q.length < 2) { card.style.display = ''; return; }
-                const searchData = card.dataset.search || '';
-                card.style.display = searchData.includes(q) ? '' : 'none';
-            });
-        });
-    }
-
     container.querySelectorAll('.lesson-header').forEach(header => {
         header.addEventListener('click', () => {
             header.parentElement.classList.toggle('open');
