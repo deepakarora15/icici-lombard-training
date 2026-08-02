@@ -1059,3 +1059,132 @@ body {
 .chatbot-input button { padding:12px 20px; background:var(--accent-primary); color:white; border:none; border-radius:8px; font-weight:600; font-size:14px; cursor:pointer; }
 .chatbot-input button:hover { background:#1a202c; }
 @media (max-width:480px) { .chatbot-container { width:calc(100vw - 32px); right:16px; bottom:16px; max-height:80vh; } }
+
+
+/* ===== ADDON ADMIN ACTIONS ===== */
+.addon-header-actions {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    margin-left: auto;
+    margin-right: 8px;
+}
+.addon-header-actions button {
+    background: none;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    padding: 4px 7px;
+    transition: background 0.15s, border-color 0.15s;
+    line-height: 1;
+}
+.addon-flag-btn:hover { background: #fff3cd; border-color: #ffc107; }
+.addon-edit-btn:hover { background: #d4edda; border-color: #28a745; }
+.addon-delete-btn:hover { background: #f8d7da; border-color: #dc3545; }
+
+/* ===== ADDON EDIT MODAL ===== */
+.addon-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    padding: 20px;
+}
+.addon-modal {
+    background: var(--bg-primary, #fff);
+    border-radius: 14px;
+    width: 100%;
+    max-width: 560px;
+    max-height: 85vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+}
+.addon-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 24px;
+    border-bottom: 1px solid var(--border, #e0e4e8);
+}
+.addon-modal-header h3 {
+    font-size: 16px;
+    font-weight: 700;
+}
+.addon-modal-close {
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    color: var(--text-secondary, #666);
+    padding: 4px 8px;
+    border-radius: 6px;
+}
+.addon-modal-close:hover { background: var(--bg-secondary, #f0f0f0); }
+.addon-modal-form {
+    padding: 20px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.addon-modal-form label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary, #666);
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    margin-top: 4px;
+}
+.addon-modal-form input,
+.addon-modal-form textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--border, #e0e4e8);
+    border-radius: 8px;
+    font-size: 13px;
+    font-family: inherit;
+    background: var(--bg-secondary, #f8f9fa);
+    color: var(--text-primary, #1a1a2e);
+    transition: border-color 0.2s;
+}
+.addon-modal-form input:focus,
+.addon-modal-form textarea:focus {
+    outline: none;
+    border-color: var(--accent-primary, #4a6fa5);
+    background: var(--bg-primary, #fff);
+}
+.addon-modal-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border, #e0e4e8);
+}
+.addon-modal-cancel {
+    padding: 9px 18px;
+    border: 1px solid var(--border, #e0e4e8);
+    border-radius: 8px;
+    background: var(--bg-secondary, #f8f9fa);
+    color: var(--text-primary, #333);
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    font-family: inherit;
+}
+.addon-modal-cancel:hover { background: var(--bg-tertiary, #eee); }
+.addon-modal-save {
+    padding: 9px 18px;
+    border: none;
+    border-radius: 8px;
+    background: #28a745;
+    color: #fff;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    font-family: inherit;
+}
+.addon-modal-save:hover { background: #218838; }

@@ -555,13 +555,18 @@ function renderLOBLessons() {
     </div>`;
 
     var sortedAddons = lobData.addons.slice().sort(function(a,b) { return a.name.localeCompare(b.name); });
+    const isAdmin = currentUser && currentUser.role === 'admin';
     container.innerHTML = slicerHtml + searchHtml + sortedAddons.map((addon, idx) => `
-        <div class="lesson-card" data-lesson="${idx}" data-products="${(addon.relevantProducts || []).join(',')}" data-search="${(addon.code + ' ' + addon.name + ' ' + addon.description + ' ' + (addon.whoShouldTake||'')).toLowerCase()}">
+        <div class="lesson-card" data-lesson="${idx}" data-addon-code="${addon.code}" data-products="${(addon.relevantProducts || []).join(',')}" data-search="${(addon.code + ' ' + addon.name + ' ' + addon.description + ' ' + (addon.whoShouldTake||'')).toLowerCase()}">
             <div class="lesson-header">
                 <div class="lesson-icon">📋</div>
                 <div class="lesson-title-wrap">
                     <h3>${addon.name} — ${addon.code}</h3>
                     <p>${addon.irdaRef ? 'IRDA Ref #' + addon.irdaRef + ' | ' : ''}${addon.relevantProducts && addon.relevantProducts.length ? '<span style="color:var(--accent-teal);font-weight:600;">Applies to: ' + addon.relevantProducts.join(', ') + '</span>' : 'Applies to: All Products'}</p>
+                </div>
+                <div class="addon-header-actions">
+                    <button class="addon-flag-btn" onclick="event.stopPropagation();flagAddon('${currentLOB}','${addon.code}')" title="Flag as Incorrect">⚠️</button>
+                    ${isAdmin ? `<button class="addon-edit-btn" onclick="event.stopPropagation();editAddon('${currentLOB}','${addon.code}')" title="Edit">✏️</button><button class="addon-delete-btn" onclick="event.stopPropagation();deleteAddon('${currentLOB}','${addon.code}')" title="Delete">🗑️</button>` : ''}
                 </div>
                 <div class="lesson-toggle">▼</div>
             </div>
@@ -826,6 +831,7 @@ document.querySelectorAll('.audit-tab').forEach(tab => {
         document.querySelectorAll('.audit-tab').forEach(t => t.classList.remove('active'));
         tab.classList.add('active');
         if (tab.dataset.audit === 'users') renderAuditUsers();
+        else if (tab.dataset.audit === 'flags') renderFlaggedItems();
         else renderAuditLogs();
     });
 });
@@ -971,6 +977,174 @@ function getChatbotResponse(query) {
 
     // Default
     return 'I can answer only about Corporate Insurance selected products (Fire, Engineering, Liability, Marine). It seems I do not have information for you right now. Regret, if I was not able to help.<br><br><em>Try asking about a specific add-on by name, e.g. "valet parking", "escalation", "debris removal", or ask "Which add-ons for IAR?"</em>';
+}
+
+// ===== ADMIN: EDIT ADDON =====
+function editAddon(lob, code) {
+    const lobData = lobPolicies[lob];
+    if (!lobData || !lobData.addons) return;
+    const addon = lobData.addons.find(a => a.code === code);
+    if (!addon) return;
+
+    // Remove existing modal if any
+    const existing = document.getElementById('addonEditModal');
+    if (existing) existing.remove();
+
+    const modal = document.createElement('div');
+    modal.id = 'addonEditModal';
+    modal.className = 'addon-modal-overlay';
+    modal.innerHTML = `
+        <div class="addon-modal">
+            <div class="addon-modal-header">
+                <h3>✏️ Edit Add-on: ${addon.code}</h3>
+                <button class="addon-modal-close" onclick="document.getElementById('addonEditModal').remove()">✕</button>
+            </div>
+            <form id="addonEditForm" class="addon-modal-form">
+                <label>Name</label>
+                <input type="text" name="name" value="${addon.name.replace(/"/g, '&quot;')}" required>
+                <label>Description</label>
+                <textarea name="description" rows="3" required>${addon.description}</textarea>
+                <label>Who Should Take It</label>
+                <textarea name="whoShouldTake" rows="2">${addon.whoShouldTake || ''}</textarea>
+                <label>Why It's Needed</label>
+                <textarea name="whyItsNeeded" rows="2">${addon.whyItsNeeded || ''}</textarea>
+                <label>Claim Impact</label>
+                <textarea name="claimImpact" rows="2">${addon.claimImpact || ''}</textarea>
+                <label>Relevant Products (comma-separated)</label>
+                <input type="text" name="relevantProducts" value="${(addon.relevantProducts || []).join(', ')}">
+                <div class="addon-modal-actions">
+                    <button type="button" class="addon-modal-cancel" onclick="document.getElementById('addonEditModal').remove()">Cancel</button>
+                    <button type="submit" class="addon-modal-save">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    `;
+    document.body.appendChild(modal);
+
+    document.getElementById('addonEditForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const form = e.target;
+        const updates = {
+            name: form.name.value.trim(),
+            description: form.description.value.trim(),
+            whoShouldTake: form.whoShouldTake.value.trim(),
+            whyItsNeeded: form.whyItsNeeded.value.trim(),
+            claimImpact: form.claimImpact.value.trim(),
+            relevantProducts: form.relevantProducts.value.split(',').map(s => s.trim()).filter(Boolean)
+        };
+
+        // Update in-memory data
+        Object.assign(addon, updates);
+
+        // Send to server
+        try {
+            await fetch(`/api/addons/${lob}/${code}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', 'x-user-role': currentUser.role },
+                body: JSON.stringify(updates)
+            });
+        } catch (err) {
+            console.error('Failed to save addon edit:', err);
+        }
+
+        document.getElementById('addonEditModal').remove();
+        renderLOBLessons();
+    });
+}
+
+// ===== ADMIN: DELETE ADDON =====
+function deleteAddon(lob, code) {
+    const lobData = lobPolicies[lob];
+    if (!lobData || !lobData.addons) return;
+    const addon = lobData.addons.find(a => a.code === code);
+    if (!addon) return;
+
+    if (!confirm(`Delete add-on "${addon.name}" (${code})? This cannot be undone.`)) return;
+
+    // Remove from in-memory data
+    lobData.addons = lobData.addons.filter(a => a.code !== code);
+
+    // Send to server
+    fetch(`/api/addons/${lob}/${code}`, {
+        method: 'DELETE',
+        headers: { 'x-user-role': currentUser.role }
+    }).catch(err => console.error('Failed to delete addon:', err));
+
+    renderLOBLessons();
+}
+
+// ===== FLAG AS INCORRECT =====
+function flagAddon(lob, code) {
+    const reason = prompt('Flag this add-on as incorrect.\n\nOptional: provide a reason or note:');
+    if (reason === null) return; // user cancelled
+
+    const flagData = {
+        addonCode: code,
+        lob: lob,
+        flaggedBy: currentUser ? currentUser.username : 'anonymous',
+        reason: reason || ''
+    };
+
+    fetch('/api/flags', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-user-role': currentUser ? currentUser.role : 'user' },
+        body: JSON.stringify(flagData)
+    }).then(res => res.json()).then(data => {
+        if (data.success) {
+            alert('Thank you. This add-on has been flagged for review.');
+        }
+    }).catch(err => {
+        console.error('Failed to flag addon:', err);
+        alert('Failed to submit flag. Please try again.');
+    });
+}
+
+// ===== ADMIN: FLAGGED ITEMS SECTION =====
+async function renderFlaggedItems() {
+    const container = document.getElementById('auditContent');
+    if (!container) return;
+
+    try {
+        const res = await fetch('/api/flags', { headers: { 'x-user-role': currentUser.role } });
+        if (!res.ok) return;
+        const flags = await res.json();
+
+        if (flags.length === 0) {
+            container.innerHTML = '<p style="color:var(--text-secondary);padding:20px;">No flagged items yet.</p>';
+            return;
+        }
+
+        container.innerHTML = `
+            <div style="overflow-x:auto;">
+                <h3 style="margin-bottom:12px;font-size:15px;">⚠️ Flagged Add-ons (${flags.length})</h3>
+                <table style="width:100%;border-collapse:collapse;font-size:13px;">
+                    <thead>
+                        <tr style="background:var(--bg-tertiary);border-bottom:2px solid var(--border);">
+                            <th style="padding:10px 12px;text-align:left;font-weight:600;color:var(--text-secondary);text-transform:uppercase;font-size:11px;">Add-on Code</th>
+                            <th style="padding:10px 12px;text-align:left;font-weight:600;color:var(--text-secondary);text-transform:uppercase;font-size:11px;">LOB</th>
+                            <th style="padding:10px 12px;text-align:left;font-weight:600;color:var(--text-secondary);text-transform:uppercase;font-size:11px;">Flagged By</th>
+                            <th style="padding:10px 12px;text-align:left;font-weight:600;color:var(--text-secondary);text-transform:uppercase;font-size:11px;">Reason</th>
+                            <th style="padding:10px 12px;text-align:left;font-weight:600;color:var(--text-secondary);text-transform:uppercase;font-size:11px;">When</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${flags.map(f => `
+                            <tr style="border-bottom:1px solid var(--border);">
+                                <td style="padding:10px 12px;font-weight:600;">${f.addonCode}</td>
+                                <td style="padding:10px 12px;"><span style="padding:3px 10px;border-radius:12px;font-size:11px;font-weight:600;background:#e0e7ff;color:#3730a3;">${f.lob}</span></td>
+                                <td style="padding:10px 12px;">${f.flaggedBy}</td>
+                                <td style="padding:10px 12px;color:var(--text-secondary);max-width:250px;overflow:hidden;text-overflow:ellipsis;">${f.reason || '<em>No reason given</em>'}</td>
+                                <td style="padding:10px 12px;color:var(--text-secondary);font-size:12px;">${new Date(f.timestamp).toLocaleString()}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            </div>
+        `;
+    } catch (err) {
+        console.error('Failed to load flags:', err);
+        container.innerHTML = '<p style="color:var(--text-secondary);padding:20px;">Failed to load flagged items.</p>';
+    }
 }
 
 // ===== INIT =====
