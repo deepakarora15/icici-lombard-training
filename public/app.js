@@ -136,30 +136,15 @@ function renderLessons() {
         });
     });
 
-    // After the lessons cards, also render Insurance Clauses as part of learning
+    // After the lessons cards, also render Marine Insurance Clauses
     if (typeof insuranceTabContent !== 'undefined') {
         const insSection = document.createElement('div');
         insSection.style.marginTop = '32px';
         insSection.innerHTML = `
-            <h2 style="font-size:20px;font-weight:700;margin-bottom:16px;">📋 Insurance Clauses Reference</h2>
-            <div class="ins-tabs">
-                <button class="ins-tab active" data-ins="marine">🚢 Marine</button>
-                <button class="ins-tab" data-ins="fire">🔥 Fire</button>
-                <button class="ins-tab" data-ins="engineering">⚙️ Engineering</button>
-                <button class="ins-tab" data-ins="liability">⚖️ Liability</button>
-            </div>
+            <h2 style="font-size:20px;font-weight:700;margin-bottom:16px;">📋 Marine Insurance Clauses Reference</h2>
             <div id="insContent"></div>
         `;
         container.appendChild(insSection);
-
-        // Re-attach insurance tab handlers
-        insSection.querySelectorAll('.ins-tab').forEach(tab => {
-            tab.addEventListener('click', () => {
-                insSection.querySelectorAll('.ins-tab').forEach(t => t.classList.remove('active'));
-                tab.classList.add('active');
-                renderInsuranceTab(tab.dataset.ins);
-            });
-        });
         renderInsuranceTab('marine');
     }
 }
