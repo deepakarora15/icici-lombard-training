@@ -880,6 +880,11 @@ function appendChatMessage(text, type) {
     container.scrollTop = container.scrollHeight;
 }
 
+function chatAddonClick(code) {
+    appendChatMessage(code, 'user');
+    setTimeout(function() { appendChatMessage(getChatbotResponse(code), 'bot'); }, 200);
+}
+
 function getChatbotResponse(query) {
     const q = query.toLowerCase();
     const allAddons = getAllAddons();
@@ -902,7 +907,7 @@ function getChatbotResponse(query) {
         var relevant = allAddons.filter(function(a) { return !a.relevantProducts || a.relevantProducts.length === 0 || a.relevantProducts.includes(pc); });
         if (relevant.length > 0) {
             var top5 = relevant.slice(0, 5);
-            return 'Found <strong>' + relevant.length + ' add-ons</strong> for <strong>' + pc + '</strong>:<br><br>' + top5.map(function(a) { return '• <strong>' + a.code + '</strong> — ' + a.name; }).join('<br>') + (relevant.length > 5 ? '<br><br>...and ' + (relevant.length - 5) + ' more. Use Learning Module → Product Slicer to see all.' : '');
+            return 'Found <strong>' + relevant.length + ' add-ons</strong> for <strong>' + pc + '</strong>:<br><br>' + top5.map(function(a) { return '• <a href="#" onclick="chatAddonClick(\'' + a.code + '\');return false;" style="color:var(--accent-primary);text-decoration:underline;font-weight:700;cursor:pointer;">' + a.code + '</a> — ' + a.name; }).join('<br>') + (relevant.length > 5 ? '<br><br>...and ' + (relevant.length - 5) + ' more. Use Learning Module → Product Slicer to see all.' : '');
         }
     }
 
@@ -928,7 +933,7 @@ function getChatbotResponse(query) {
         var found = allAddons.filter(function(a) { var s = (a.name + ' ' + a.code + ' ' + a.description + ' ' + (a.whoShouldTake || '')).toLowerCase(); return words.some(function(k) { return s.includes(k); }); });
         if (found.length > 0) {
             var t3 = found.slice(0, 3);
-            return 'Found <strong>' + found.length + ' related add-on(s)</strong>:<br><br>' + t3.map(function(a) { return '• <strong>' + a.code + '</strong> (' + a.lobIcon + ') — ' + a.name; }).join('<br>') + (found.length > 3 ? '<br><br>...and ' + (found.length - 3) + ' more.' : '');
+            return 'Found <strong>' + found.length + ' related add-on(s)</strong>:<br><br>' + t3.map(function(a) { return '• <a href="#" onclick="chatAddonClick(\'' + a.code + '\');return false;" style="color:var(--accent-primary);text-decoration:underline;font-weight:700;cursor:pointer;">' + a.code + '</a> (' + a.lobIcon + ') — ' + a.name; }).join('<br>') + (found.length > 3 ? '<br><br>...and ' + (found.length - 3) + ' more.' : '');
         }
     }
 
