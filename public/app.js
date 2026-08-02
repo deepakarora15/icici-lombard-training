@@ -569,12 +569,13 @@ function renderLOBLessons() {
         <input type="text" id="lobAddonSearch" placeholder="🔍 Search within ${config.name} add-ons..." style="width:100%;max-width:500px;padding:12px 16px;border:2px solid var(--border);border-radius:10px;font-size:15px;font-family:inherit;transition:border-color 0.2s;" onfocus="this.style.borderColor='var(--accent-primary)'" onblur="this.style.borderColor='var(--border)'">
     </div>`;
 
-    container.innerHTML = slicerHtml + searchHtml + lobData.addons.map((addon, idx) => `
+    var sortedAddons = lobData.addons.slice().sort(function(a,b) { return a.name.localeCompare(b.name); });
+    container.innerHTML = slicerHtml + searchHtml + sortedAddons.map((addon, idx) => `
         <div class="lesson-card" data-lesson="${idx}" data-products="${(addon.relevantProducts || []).join(',')}" data-search="${(addon.code + ' ' + addon.name + ' ' + addon.description + ' ' + (addon.whoShouldTake||'')).toLowerCase()}">
             <div class="lesson-header">
                 <div class="lesson-icon">📋</div>
                 <div class="lesson-title-wrap">
-                    <h3>${addon.code} — ${addon.name}</h3>
+                    <h3>${addon.name} — ${addon.code}</h3>
                     <p>${addon.irdaRef ? 'IRDA Ref #' + addon.irdaRef + ' | ' : ''}${addon.relevantProducts && addon.relevantProducts.length ? '<span style="color:var(--accent-teal);font-weight:600;">Applies to: ' + addon.relevantProducts.join(', ') + '</span>' : 'Applies to: All Products'}</p>
                 </div>
                 <div class="lesson-toggle">▼</div>
@@ -664,7 +665,7 @@ function renderSearchResults(query) {
     container.innerHTML = `<p class="search-count">${results.length} add-on(s) found</p>` + results.map(a => `
         <div class="search-result-card">
             <div class="sr-lob">${a.lobIcon} ${a.lobName} ${a.irdaRef ? '| IRDA #' + a.irdaRef : ''}</div>
-            <div class="sr-name">${a.code} — ${a.name}</div>
+            <div class="sr-name">${a.name} — ${a.code}</div>
             <div class="sr-desc">${a.description}</div>
             ${a.whoShouldTake ? `<div class="sr-detail"><strong>Who:</strong> ${a.whoShouldTake}</div>` : ''}
             ${a.claimImpact ? `<div class="sr-detail"><strong>⚠️ If not opted:</strong> ${a.claimImpact}</div>` : ''}
@@ -918,7 +919,7 @@ function getChatbotResponse(query) {
     // Check if asking about a specific addon by code
     const matchedAddon = allAddons.find(a => q.includes(a.code.toLowerCase()) || a.name.toLowerCase().split('(')[0].trim().split('/')[0].trim().length > 4 && q.includes(a.name.toLowerCase().split('(')[0].trim().split('/')[0].trim().substring(0,15)));
     if (matchedAddon) {
-        let r = '<strong>' + matchedAddon.code + ' — ' + matchedAddon.name + '</strong><br>' + matchedAddon.description;
+        let r = '<strong>' + matchedAddon.name + ' — ' + matchedAddon.code + '</strong><br>' + matchedAddon.description;
         if (matchedAddon.whoShouldTake) r += '<br><br><strong>Who should take it:</strong> ' + matchedAddon.whoShouldTake;
         if (matchedAddon.claimImpact) r += '<br><br><strong>⚠️ If not opted:</strong> ' + matchedAddon.claimImpact;
         r += '<br><br><em>(' + matchedAddon.lobIcon + ' ' + matchedAddon.lobName + ')</em>';
@@ -933,7 +934,7 @@ function getChatbotResponse(query) {
         var relevant = allAddons.filter(function(a) { return !a.relevantProducts || a.relevantProducts.length === 0 || a.relevantProducts.includes(pc); });
         if (relevant.length > 0) {
             var top5 = relevant.slice(0, 5);
-            return 'Found <strong>' + relevant.length + ' add-ons</strong> for <strong>' + pc + '</strong>:<br><br>' + top5.map(function(a) { return '• <a href="#" onclick="chatAddonClick(\'' + a.code + '\');return false;" style="color:var(--accent-primary);text-decoration:underline;font-weight:700;cursor:pointer;">' + a.code + '</a> — ' + a.name; }).join('<br>') + (relevant.length > 5 ? '<br><br>...and ' + (relevant.length - 5) + ' more. Use Learning Module → Product Slicer to see all.' : '');
+            return 'Found <strong>' + relevant.length + ' add-ons</strong> for <strong>' + pc + '</strong>:<br><br>' + top5.map(function(a) { return '• <a href="#" onclick="chatAddonClick(\'' + a.code + '\');return false;" style="color:var(--accent-primary);text-decoration:underline;font-weight:700;cursor:pointer;">' + a.name + '</a> — ' + a.code; }).join('<br>') + (relevant.length > 5 ? '<br><br>...and ' + (relevant.length - 5) + ' more. Use Learning Module → Product Slicer to see all.' : '');
         }
     }
 
@@ -941,7 +942,7 @@ function getChatbotResponse(query) {
     if (q.includes('what if') || q.includes('without') || q.includes('impact') || q.includes('not take')) {
         var kws = q.replace(/what if|without|impact|not take|don't take|i|the|do/gi, '').trim().split(/\s+/);
         var matches = allAddons.filter(function(a) { var s = (a.name + ' ' + a.code + ' ' + a.description).toLowerCase(); return kws.some(function(k) { return k.length > 3 && s.includes(k); }); });
-        if (matches.length > 0) return '<strong>⚠️ ' + matches[0].code + ' — ' + matches[0].name + '</strong><br><br>' + (matches[0].claimImpact || 'Claim impact info not available.');
+        if (matches.length > 0) return '<strong>⚠️ ' + matches[0].name + ' — ' + matches[0].code + '</strong><br><br>' + (matches[0].claimImpact || 'Claim impact info not available.');
     }
 
     // Check for product info
@@ -962,13 +963,13 @@ function getChatbotResponse(query) {
         var phraseMatch = allAddons.filter(function(a) { var s = (a.name + ' ' + a.code).toLowerCase(); return s.includes(phraseQ); });
         if (phraseMatch.length > 0) {
             var t3 = phraseMatch.slice(0, 3);
-            return 'Found <strong>' + phraseMatch.length + ' related add-on(s)</strong>:<br><br>' + t3.map(function(a) { return '• <a href="#" onclick="chatAddonClick(\'' + a.code + '\');return false;" style="color:var(--accent-primary);text-decoration:underline;font-weight:700;cursor:pointer;">' + a.code + '</a> (' + a.lobIcon + ') — ' + a.name; }).join('<br>') + (phraseMatch.length > 3 ? '<br><br>...and ' + (phraseMatch.length - 3) + ' more.' : '');
+            return 'Found <strong>' + phraseMatch.length + ' related add-on(s)</strong>:<br><br>' + t3.map(function(a) { return '• <a href="#" onclick="chatAddonClick(\'' + a.code + '\');return false;" style="color:var(--accent-primary);text-decoration:underline;font-weight:700;cursor:pointer;">' + a.name + '</a> (' + a.lobIcon + ') — ' + a.code; }).join('<br>') + (phraseMatch.length > 3 ? '<br><br>...and ' + (phraseMatch.length - 3) + ' more.' : '');
         }
         // Priority 2: All significant words must match
         var allWordsMatch = allAddons.filter(function(a) { var s = (a.name + ' ' + a.code + ' ' + a.description + ' ' + (a.whoShouldTake || '')).toLowerCase(); return words.every(function(k) { return s.includes(k); }); });
         if (allWordsMatch.length > 0) {
             var t3 = allWordsMatch.slice(0, 5);
-            return 'Found <strong>' + allWordsMatch.length + ' related add-on(s)</strong>:<br><br>' + t3.map(function(a) { return '• <a href="#" onclick="chatAddonClick(\'' + a.code + '\');return false;" style="color:var(--accent-primary);text-decoration:underline;font-weight:700;cursor:pointer;">' + a.code + '</a> (' + a.lobIcon + ') — ' + a.name; }).join('<br>') + (allWordsMatch.length > 5 ? '<br><br>...and ' + (allWordsMatch.length - 5) + ' more.' : '');
+            return 'Found <strong>' + allWordsMatch.length + ' related add-on(s)</strong>:<br><br>' + t3.map(function(a) { return '• <a href="#" onclick="chatAddonClick(\'' + a.code + '\');return false;" style="color:var(--accent-primary);text-decoration:underline;font-weight:700;cursor:pointer;">' + a.name + '</a> (' + a.lobIcon + ') — ' + a.code; }).join('<br>') + (allWordsMatch.length > 5 ? '<br><br>...and ' + (allWordsMatch.length - 5) + ' more.' : '');
         }
         // Priority 3: Any significant word matches (fallback) — but require at least 4 char words
         var sigWords = words.filter(function(w) { return w.length > 3; });
@@ -976,7 +977,7 @@ function getChatbotResponse(query) {
             var found = allAddons.filter(function(a) { var s = (a.name + ' ' + a.code + ' ' + a.description + ' ' + (a.whoShouldTake || '')).toLowerCase(); return sigWords.some(function(k) { return s.includes(k); }); });
             if (found.length > 0 && found.length <= 10) {
                 var t3 = found.slice(0, 5);
-                return 'Found <strong>' + found.length + ' related add-on(s)</strong>:<br><br>' + t3.map(function(a) { return '• <a href="#" onclick="chatAddonClick(\'' + a.code + '\');return false;" style="color:var(--accent-primary);text-decoration:underline;font-weight:700;cursor:pointer;">' + a.code + '</a> (' + a.lobIcon + ') — ' + a.name; }).join('<br>') + (found.length > 5 ? '<br><br>...and ' + (found.length - 5) + ' more. Try being more specific.' : '');
+                return 'Found <strong>' + found.length + ' related add-on(s)</strong>:<br><br>' + t3.map(function(a) { return '• <a href="#" onclick="chatAddonClick(\'' + a.code + '\');return false;" style="color:var(--accent-primary);text-decoration:underline;font-weight:700;cursor:pointer;">' + a.name + '</a> (' + a.lobIcon + ') — ' + a.code; }).join('<br>') + (found.length > 5 ? '<br><br>...and ' + (found.length - 5) + ' more. Try being more specific.' : '');
             } else if (found.length > 10) {
                 return 'Found ' + found.length + ' results — too many matches. Try a more specific query like the addon name or code. Examples: "valet parking", "spontaneous combustion", "ESCALATION"';
             }
