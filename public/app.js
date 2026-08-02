@@ -970,12 +970,7 @@ function getChatbotResponse(query) {
     }
 
     // Default
-    var defs = [
-        'Try asking about a specific add-on by name or code. Example: "What is spontaneous combustion?" or "Tell me about SFSP"',
-        'I can help with: add-on covers, product info, claim impact. Try: "Which add-ons for CAR?" or "What if I don\'t take earthquake cover?"',
-        'I search across 130+ insurance add-ons. Try keywords like: "earthquake", "terrorism", "debris", "customs duty", "sprinkler"'
-    ];
-    return defs[Math.floor(Math.random() * defs.length)];
+    return 'I can answer only about Corporate Insurance selected products (Fire, Engineering, Liability, Marine). It seems I do not have information for you right now. Regret, if I was not able to help.<br><br><em>Try asking about a specific add-on by name, e.g. "valet parking", "escalation", "debris removal", or ask "Which add-ons for IAR?"</em>';
 }
 
 // ===== INIT =====
